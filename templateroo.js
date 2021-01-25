@@ -133,8 +133,6 @@ var exampleHTML = `
       </div>
     </div>
   </body>
-
-  <script  src= '../js/templateroo.js'></script>
 </html>
 `
 
