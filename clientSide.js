@@ -1,156 +1,13 @@
-var exampleHTML = `
-<!doctype html>
-<html>
-  <head>
-    <title>templateroo</title>
-    <style type="text/css">
-      .hidden {
-        display: none;
-      }
-    </style>
-  </head>
-
-  <body>
-    <script>
-      packageName = "templateroo"
-      headerText = "Welcome to "+ packageName + "!";
-    </script>
-    <b>~headerText</b>
-    <pre>
-      This package is written in pure JS and has no dependencies. The ~packageName<wbr>.js
-      file can be included as a script element in any html webpage or static html file,
-      and it will run templating functions on the contents of that page.
-    </pre>
-    <br>
-    <pre>
-    <b>Basics</b>
-        <b>~</b>: Any variable name preceded by "~" in html
-                  will be replaced with the value of the variable when rendered
-
-        <b>@</b>: Any variable name preceded by "@" in html will be replaced with the value of the variable when rendered,
-                  AND will dynamically udate if the variable changes
-
-        <b>for</b>: For loops are created using the &ltfor&gt tag with attributes of var, range, or list
-
-        <b>if</b>: If statements are created using the &ltif&gt tag with attribute of condition
-
-        <b>switch</b>: switch statements are created using the &ltswitch&gt and &ltcase&gt tags
-
-        <b>eval</b>: strings can be evaluated in js using {{x}}
-
-        <b>escapes</b>: strings can be escaped in html using {<wbr>{{x}}<wbr>}
-
-
-
-    <b>Examples</b>
-    First, initialize some windows variables as follows.
-    Do not use <b>var</b> to initialize...
-          {{{
-            <script>
-              a= 1
-              b = ["a","b","c"]
-              ind = 0
-              B = b[ind]
-              c = {'a': 2, 'b': 3}
-              d = ['taco','burrito','pineapple']
-              changeB= ()=>{
-                ind++;
-                B = b[ind%b.length]
-                console.log("changing b")
-              }
-              e = false
-              f = true
-            </script>
-          }}}
-      Now, the code on the left will be rendered as on the right...
-    </pre>
-
-    <div style="width:60%;left:20%;">
-      <div style="left:10%;width:40%;position:absolute;background-color:#909090;height:400px;">
-        <pre>{{{
-          <pre>
-            <b>~a</b></br>
-            <b>~b</b></br>
-            <b>~ind</b> | <b>@ind</b></br>
-            <b>~B</b> | <b>@B</b></br>
-
-            <switch condition=~B >
-              <case val=a >Apple</case>
-              <case val=b >Orange</case>
-              <case val=c >Pear</case>
-            </switch>
-
-            <if condition=~e>e is true</if>
-            <if condition=~f>f is true</if>
-
-            <button onclick="changeB()">changeB()</button>
-          </pre>
-          <div style = "margin-left:25%">
-            <for var=~i range=2>
-              <div><for var=~j range=5>{{~i*~j}}</for> </div>
-            </for>
-          </div>
-        }}}</pre>
-      </div>
-      <div style = "right:10%;width:40%;position:absolute;background-color:#606060;height:400px;">
-        <pre>
-          <script>
-            a= 1
-            b = ["a","b","c"]
-            ind = 0
-            B = b[ind]
-            c = {'a': 2, 'b': 3}
-            d = ['taco','burrito','pineapple']
-            changeB= ()=>{
-              ind++;
-              B = b[ind%b.length]
-              console.log("changing b")
-            }
-            e = false
-            f = true
-          </script>
-          <b>~a</b></br>
-          <b>~b</b></br>
-          <b>~ind</b> | <b>@ind</b></br>
-          <b>~B</b> | <b>@B</b></br>
-
-          <switch condition=~B >
-            <case val=a >Apple</case>
-            <case val=b >Orange</case>
-            <case val=c >Pear</case>
-          </switch>
-
-          <if condition=~e>e is true</if>
-          <if condition=~f>f is true</if>
-
-          <button onclick="changeB()">changeB()</button>
-        </pre>
-        <div style = "margin-left:25%">
-          <for var=~i range=2>
-            <div><for var=~j range=5>{{~i*~j}}</for> </div>
-          </for>
-        </div>
-      </div>
-    </div>
-  </body>
-
-  <script  src= '../js/templateroo.js'></script>
-</html>
-`
-
-
-
-var templaterooString = `
-    var templateroo = {
-    modes: {
+var templateroo = {
+  modes: {
     varMode:'~x',
     activeVarMode: '@x',
     evalMode: '{{x}}',
     escapeMode: '{{{x}}}',
     forMode: '<key~x</key>',
     varObj: window,
-    },
-    htmlEscapes: {
+  },
+  htmlEscapes: {
     "'": "&quot",
     '"': "&quot",
     '<': "&lt",
@@ -161,22 +18,22 @@ var templaterooString = `
     "{{": "{<wbr>{",
     "}}}": "}<wbr>}<wbr>}",
     "}}": "}<wbr>}",
-    },
-    escapeHTMLString: (s)=>{
+  },
+  escapeHTMLString: (s)=>{
     // console.log("escaping", s)
     for (let [key, val] of Object.entries(templateroo.htmlEscapes)){
       s = s.replaceAll(key, val)
     }
     // console.log(s)
     return s
-    },
-    unEscapeHTMLString: (s)=>{
+  },
+  unEscapeHTMLString: (s)=>{
     for (let [key, val] of Object.entries(templateroo.htmlEscapes)){
       s = s.replaceAll(val, key)
     }
     return s
-    },
-    escapeHTML: (s, mode = '{{{x}}}')=>{
+  },
+  escapeHTML: (s, mode = '{{{x}}}')=>{
     //make regexp
     let re = mode;
     re = templateroo.escape(re)
@@ -194,15 +51,15 @@ var templaterooString = `
       }catch{}
     }
     return s
-    },
-    toString: (v)=>{
+  },
+  toString: (v)=>{
     if (typeof v === 'string' || v instanceof String){
       return v
     }else{
       return JSON.stringify(v)
     }
-    },
-    findUserVariables: (varObj = window)=>{
+  },
+  findUserVariables: (varObj = window)=>{
     let vars = {}
     let start = false;
     for (let variable in varObj) {
@@ -218,8 +75,8 @@ var templaterooString = `
     }
 
     return vars
-    },
-    addVarChangeCbs: (varName, obj=window, changeCb=(vn,v)=>{}, setCb=(vn,v)=>{}, getCb=(vn,v)=>{}, prefix = '')=>{
+  },
+  addVarChangeCbs: (varName, obj=window, changeCb=(vn,v)=>{}, setCb=(vn,v)=>{}, getCb=(vn,v)=>{}, prefix = '')=>{
     let val = window[varName]
     delete window[varName]
     // console.log(window[varName])
@@ -243,39 +100,39 @@ var templaterooString = `
         templateroo.addVarChangeCbs(k, obj[varName], changeCb, setCb, getCb, prefix + '.' + k)
       }
     }
-    },
-    monitorVars: (varNames, changeCb=(vn,v)=>{}, obj = window,)=>{
+  },
+  monitorVars: (varNames, changeCb=(vn,v)=>{}, obj = window,)=>{
     for (let varName of varNames){
       templateroo.addVarChangeCbs(varName, obj, changeCb)
     }
-    },
-    monitorUserVars: (changeCb=(vn, v)=> {console.log(vn,"=",v)}, varNames = 'all')=>{
+  },
+  monitorUserVars: (changeCb=(vn, v)=> {console.log(vn,"=",v)}, varNames = 'all')=>{
     if (varNames == 'all'){
       varNames = Object.keys(templateroo.findUserVariables());
     }
     templateroo.monitorVars(varNames, changeCb)
-    },
-    autoUpdateUserVars: (activeVarMode = '@x')=>{
+  },
+  autoUpdateUserVars: (activeVarMode = '@x')=>{
     let changeCb = (varName, v)=>{
       console.log(varName,"=",v)
       templateroo.varUpdate(templateroo.doc, varName, v, activeVarMode)
     }
     console.log("adding autoUpdate to ", templateroo.activeVarNames)
     templateroo.monitorVars(templateroo.activeVarNames, changeCb)
-    },
-    escape: (s)=>{
-    let escapes = '\\\\()[]{}./'
+  },
+  escape: (s)=>{
+    let escapes = '\\()[]{}./'
     for (let escape of escapes){
-      s = s.replaceAll(escape, '\\\\'+ escape)
+      s = s.replaceAll(escape, '\\'+ escape)
     }
     return s
-    },
-    match: (s, re)=>[...s.matchAll(re)].map((v)=>v.pop()).filter(v=>v),
-    multi_index: (obj, mis)=>{
+  },
+  match: (s, re)=>[...s.matchAll(re)].map((v)=>v.pop()).filter(v=>v),
+  multi_index: (obj, mis)=>{
     if (obj.hasOwnProperty(mis)){
       return [obj[mis], true]
     }
-    let indices = templateroo.match(mis, /(.*?)[[`+"`"+`]\\\.\\\]\\\[]+?/g);
+    let indices = templateroo.match(mis, /(.*?)[[&quot]\.\]\[]+?/g);
     let v = obj
     if (indices.length > 0){
       try{
@@ -286,10 +143,10 @@ var templaterooString = `
       }catch{}
     }
     return [mis, false]
-    },
-    initialVarReplace: (s, varObj = window, mode = '~x', active = false)=>{
+  },
+  initialVarReplace: (s, varObj = window, mode = '~x', active = false)=>{
     //make regexp
-    let re = RegExp(mode.replace('x','(.*?)') + `+"`"+`['"]?[$<>\\\\s]`+"`"+`,'g')
+    let re = RegExp(mode.replace('x','(.*?)') + `['"]?[$<>\\s]`,'g')
 
     //find variable names to replace
     let vars = templateroo.match(s + " ", re)
@@ -344,8 +201,8 @@ var templaterooString = `
       }
     }
     return s
-    },
-    varUpdate: (s, varName, v, mode='@x')=>{
+  },
+  varUpdate: (s, varName, v, mode='@x')=>{
     let els = document.getElementsByClassName(mode.replace("x", varName))
     for (let el of els){
       let di = el.getAttribute("data-initial")
@@ -354,8 +211,8 @@ var templaterooString = `
       // di = templateroo.replace(di)
       el.innerHTML = di
     }
-    },
-    evalReplace: (s, mode = '{{x}}')=>{
+  },
+  evalReplace: (s, mode = '{{x}}')=>{
     //make regexp
     let re = mode;
     re = templateroo.escape(re)
@@ -374,13 +231,13 @@ var templaterooString = `
     }
 
     return s
-    },
-    _findAll: (s0, f)=>{
+  },
+  _findAll: (s0, f)=>{
     let s = s0
     let a = [];
     let c = -1;
     let i = s.indexOf(f);
-    let n = f.length + ( -f.length + 1);
+  	let n = f.length + ( -f.length + 1);
     while(i>-1){
       c+=(i+1);
       a.push(c);
@@ -388,8 +245,8 @@ var templaterooString = `
       i = s.indexOf(f);
     }
     return a
-    },
-    _matchNestedInds: (startInds, endInds)=>{
+  },
+  _matchNestedInds: (startInds, endInds)=>{
     let groups= [];
     let allInds = startInds.concat(endInds).sort((x,y)=>1*(x>y)-1*(y>x))
     // console.log(allInds)
@@ -407,8 +264,8 @@ var templaterooString = `
       }
     })
     return groups
-    },
-    _matchGroups: (obj)=>{
+  },
+  _matchGroups: (obj)=>{
     //remove empty values
     Object.keys(obj).map(k=>{if (obj[k].length == 0){delete obj[k]}})
 
@@ -448,8 +305,8 @@ var templaterooString = `
       }
     })
     return levelGroups
-    },
-    _findNestedGroups: (s='', mode = '<key~x</key>', keys = ['for','while','if','switch'])=>{
+  },
+  _findNestedGroups: (s='', mode = '<key~x</key>', keys = ['for','while','if','switch'])=>{
     let re = ''
     let i = {}
     for(let key of keys){
@@ -461,13 +318,13 @@ var templaterooString = `
     }
     let groups = templateroo._matchGroups(i)
     return groups
-    },
-    _replaceString: (s, startInd=0, endInd=0, replacement="")=>{
+  },
+  _replaceString: (s, startInd=0, endInd=0, replacement="")=>{
     return s.slice(0,startInd) + replacement + s.slice(endInd)
-    },
-    _findAttributes: (inner, attrSeperator = '>', valSeperator = '=')=>{
+  },
+  _findAttributes: (inner, attrSeperator = '>', valSeperator = '=')=>{
     //make regExp
-     let reString = '\\\\s*(.*?)\\\\s*' + valSeperator + '\\\\s*"*(.+?)"*[\\\\s$]'
+     let reString = '\\s*(.*?)\\s*' + valSeperator + '\\s*"*(.+?)"*[\\s$]'
     let re = new RegExp(reString,'g')
 
     //match attributes
@@ -481,8 +338,8 @@ var templaterooString = `
     matches.map(v=>a[v[v.length-2]]= v.pop())
     let obj = [a, t1]
     return obj
-    },
-    _replaceFor: (a, val)=>{
+  },
+  _replaceFor: (a, val)=>{
     // console.log("For replacement: a=", a, "val=",val)
     let o = {
       var: '~_',
@@ -514,25 +371,25 @@ var templaterooString = `
     for (let v of o.list){
       out.push(val.replaceAll(o.var, v))
     }
-    let replacement = out.join("\\\n")
+    let replacement = out.join("\n")
     return replacement
-    },
-    _replaceIf: (a, v)=>{
+  },
+  _replaceIf: (a, v)=>{
     let o = {
       condition: 'true',
     }
     o = Object.assign(o, a);
     v = ["",v][1*(o.condition=="true")]
     return v
-    },
-    _replaceSwitch: (a, v)=>{
+  },
+  _replaceSwitch: (a, v)=>{
     let o = {
       condition: '',
     }
     o = Object.assign(o, a);
     console.log(o.condition, v)
-    let re = /<case[^]*?val\\\s*=["\\\s[`+"`"+`]]*([^]+?)["\\\s[`+"`"+`]]*?>[^]+?<\\\/case>/g
-    let re2 = /<case[^]*?>([^]+?)<\\\/case>/g
+    let re = /<case[^]*?val\s*=["\s[&quot]]*([^]+?)["\s[&quot]]*?>[^]+?<\/case>/g
+    let re2 = /<case[^]*?>([^]+?)<\/case>/g
     let cases = templateroo.match(v, re)
     let vals = templateroo.match(v, re2)
     console.log({cases,vals})
@@ -542,11 +399,11 @@ var templaterooString = `
     }
     // console.log(v, vals)
     return v
-    },
-    _replaceWhile: (a, v)=>{
+  },
+  _replaceWhile: (a, v)=>{
     return v
-    },
-    replaceConditionals: (s, mode = '<key~x</key>', funcs = undefined)=>{
+  },
+  replaceConditionals: (s, mode = '<key~x</key>', funcs = undefined)=>{
     let s0 = s
     if (!funcs){
       funcs = {
@@ -587,8 +444,8 @@ var templaterooString = `
     }
     s = replaceDeepestGroup(s, groups);
     return s
-    },
-    replace: (s, modes={})=>{
+  },
+  replace: (s, modes={})=>{
     let m = Object.assign(templateroo.modes, modes)
     s = templateroo.escapeHTML(s, m.escapeMode)
     s = templateroo.initialVarReplace(s, m.varObj, m.varMode);
@@ -596,15 +453,15 @@ var templaterooString = `
     s = templateroo.replaceConditionals(s, m.conditionalMode)
     s = templateroo.evalReplace(s, m.evalMode);
     return s
-    },
-    replaceDoc: (s)=>{
+  },
+  replaceDoc: (s)=>{
     console.log('replacing doc')
     let v = templateroo.activeVarNames
     document.write(s)
     templateroo.activeVarNames = v
     templateroo.doc = s
-    },
-    createDocument: (window, modes = {})=>{
+  },
+  createDocument: (window, modes = {})=>{
     document.addEventListener('DOMContentLoaded', function () {
       templateroo.activeVarNames= []
       let doc;
@@ -618,16 +475,144 @@ var templaterooString = `
       templateroo.replaceDoc(newDoc);
       templateroo.autoUpdateUserVars();
     })
-    },
-    }
+  },
+  exampleHTML: `
+  <!doctype html>
+  <html>
+    <head>
+      <title>templateroo</title>
+      <style type="text/css">
+        .hidden {
+          display: none;
+        }
+      </style>
+    </head>
+
+    <body>
+      <script>
+        packageName = "templateroo"
+        headerText = "Welcome to "+ packageName + "!";
+      </script>
+      <b>~headerText</b>
+      <pre>
+        This package is written in pure JS and has no dependencies. The ~packageName<wbr>.js
+        file can be included as a script element in any html webpage or static html file,
+        and it will run templating functions on the contents of that page.
+      </pre>
+      <br>
+      <pre>
+      <b>Basics</b>
+          <b>~</b>: Any variable name preceded by "~" in html
+                    will be replaced with the value of the variable when rendered
+
+          <b>@</b>: Any variable name preceded by "@" in html will be replaced with the value of the variable when rendered,
+                    AND will dynamically udate if the variable changes
+
+          <b>for</b>: For loops are created using the &ltfor&gt tag with attributes of var, range, or list
+
+          <b>if</b>: If statements are created using the &ltif&gt tag with attribute of condition
+
+          <b>switch</b>: switch statements are created using the &ltswitch&gt and &ltcase&gt tags
+
+          <b>eval</b>: strings can be evaluated in js using {{x}}
+
+          <b>escapes</b>: strings can be escaped in html using {<wbr>{{x}}<wbr>}
+
+
+
+      <b>Examples</b>
+      First, initialize some windows variables as follows.
+      Do not use <b>var</b> to initialize...
+            {{{
+              <script>
+                a= 1
+                b = ["a","b","c"]
+                ind = 0
+                B = b[ind]
+                c = {'a': 2, 'b': 3}
+                d = ['taco','burrito','pineapple']
+                changeB= ()=>{
+                  ind++;
+                  B = b[ind%b.length]
+                  console.log("changing b")
+                }
+                e = false
+                f = true
+              </script>
+            }}}
+        Now, the code on the left will be rendered as on the right...
+      </pre>
+
+      <div style="width:60%;left:20%;">
+        <div style="left:10%;width:40%;position:absolute;background-color:#909090;height:400px;">
+          <pre>{{{
+            <pre>
+              <b>~a</b></br>
+              <b>~b</b></br>
+              <b>~ind</b> | <b>@ind</b></br>
+              <b>~B</b> | <b>@B</b></br>
+
+              <switch condition=~B >
+                <case val=a >Apple</case>
+                <case val=b >Orange</case>
+                <case val=c >Pear</case>
+              </switch>
+
+              <if condition=~e>e is true</if>
+              <if condition=~f>f is true</if>
+
+              <button onclick="changeB()">changeB()</button>
+            </pre>
+            <div style = "margin-left:25%">
+              <for var=~i range=2>
+                <div><for var=~j range=5>{{~i*~j}}</for> </div>
+              </for>
+            </div>
+          }}}</pre>
+        </div>
+        <div style = "right:10%;width:40%;position:absolute;background-color:#606060;height:400px;">
+          <pre>
+            <script>
+              a= 1
+              b = ["a","b","c"]
+              ind = 0
+              B = b[ind]
+              c = {'a': 2, 'b': 3}
+              d = ['taco','burrito','pineapple']
+              changeB= ()=>{
+                ind++;
+                B = b[ind%b.length]
+                console.log("changing b")
+              }
+              e = false
+              f = true
+            </script>
+            <b>~a</b></br>
+            <b>~b</b></br>
+            <b>~ind</b> | <b>@ind</b></br>
+            <b>~B</b> | <b>@B</b></br>
+
+            <switch condition=~B >
+              <case val=a >Apple</case>
+              <case val=b >Orange</case>
+              <case val=c >Pear</case>
+            </switch>
+
+            <if condition=~e>e is true</if>
+            <if condition=~f>f is true</if>
+
+            <button onclick="changeB()">changeB()</button>
+          </pre>
+          <div style = "margin-left:25%">
+            <for var=~i range=2>
+              <div><for var=~j range=5>{{~i*~j}}</for> </div>
+            </for>
+          </div>
+        </div>
+      </div>
+    </body>
+
+    <script  src= '../js/templateroo.js'></script>
+  </html>
 `
-
-var addTemplaterooClentSide= (htmlContent)=>{
-  return htmlContent + '<script>'+ templaterooString + '</script>' + '<script>templateroo.createDocument();</script>'
-}
-
-module.exports = {
-  template: addTemplaterooClentSide,
-  exampleHTML: exampleHTML,
-  loadExample: addTemplaterooClentSide(exampleHTML)
 }
