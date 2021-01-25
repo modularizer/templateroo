@@ -2,7 +2,7 @@
   "name": "templateroo",
   "version": "1.0.2",
   "description": "html templating app with for, if, switch, and auto-refresh capabilites, written in pure JS with no dependencies ",
-  "main": "app.js",
+  "main": "templateroo.js",
   "scripts": {
     "test": "templateroo.createDocument('example')"
   },
