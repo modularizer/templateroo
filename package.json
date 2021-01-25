@@ -1,6 +1,6 @@
 {
   "name": "templateroo",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Client side html templating app with for, if, switch, and auto-refresh capabilites, written in pure JS with no dependencies. ",
   "main": "templateroo.js",
   "scripts": {
