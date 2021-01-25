@@ -1,0 +1,28 @@
+{
+  "name": "templateroo",
+  "version": "1.0.0",
+  "description": "html templating app with for, if, switch, and auto-refresh capabilites, written in pure JS with no dependencies ",
+  "main": "app.js",
+  "scripts": {
+    "test": "templateroo.createDocument('example')"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/geargaroo/templateroo.git"
+  },
+  "keywords": [
+    "template",
+    "templating",
+    "pureJS",
+    "for",
+    "if",
+    "switch",
+    "refresh"
+  ],
+  "author": "Torin Halsted",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/geargaroo/templateroo/issues"
+  },
+  "homepage": "https://github.com/geargaroo/templateroo#readme"
+}
