@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+  <head>
+    <title>templateroo</title>
+    <style type="text/css">
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <script>
+      packageName = "templateroo"
+      headerText = "Welcome to "+ packageName + "!";
+    </script>
+    <b>~headerText</b>
+    <pre>
+      This package is written in pure JS and has no dependencies. The ~packageName<wbr>.js
+      file can be included as a script element in any html webpage or static html file,
+      and it will run templating functions on the contents of that page.
+    </pre>
+    <br>
+    <pre>
+    <b>Basics</b>
+        <b>~</b>: Any variable name preceded by "~" in html
+                  will be replaced with the value of the variable when rendered
+
+        <b>@</b>: Any variable name preceded by "@" in html will be replaced with the value of the variable when rendered,
+                  AND will dynamically udate if the variable changes
+
+        <b>for</b>: For loops are created using the &ltfor&gt tag with attributes of var, range, or list
+
+        <b>if</b>: If statements are created using the &ltif&gt tag with attribute of condition
+
+        <b>switch</b>: switch statements are created using the &ltswitch&gt and &ltcase&gt tags
+
+        <b>eval</b>: strings can be evaluated in js using {{x}}
+
+        <b>escapes</b>: strings can be escaped in html using {<wbr>{{x}}<wbr>}
+
+
+
+    <b>Examples</b>
+    First, initialize some windows variables as follows.
+    Do not use <b>var</b> to initialize...
+          {{{
+            <script>
+              a= 1
+              b = ["a","b","c"]
+              ind = 0
+              B = b[ind]
+              c = {'a': 2, 'b': 3}
+              d = ['taco','burrito','pineapple']
+              changeB= ()=>{
+                ind++;
+                B = b[ind%b.length]
+                console.log("changing b")
+              }
+              e = false
+              f = true
+            </script>
+          }}}
+      Now, the code on the left will be rendered as on the right...
+    </pre>
+
+    <div style="width:60%;left:20%;">
+      <div style="left:10%;width:40%;position:absolute;background-color:#909090;height:400px;">
+        <pre>{{{
+          <pre>
+            <b>~a</b></br>
+            <b>~b</b></br>
+            <b>~ind</b> | <b>@ind</b></br>
+            <b>~B</b> | <b>@B</b></br>
+
+            <switch condition=~B >
+              <case val=a >Apple</case>
+              <case val=b >Orange</case>
+              <case val=c >Pear</case>
+            </switch>
+
+            <if condition=~e>e is true</if>
+            <if condition=~f>f is true</if>
+
+            <button onclick="changeB()">changeB()</button>
+          </pre>
+          <div style = "margin-left:25%">
+            <for var=~i range=2>
+              <div><for var=~j range=5>{{~i*~j}}</for> </div>
+            </for>
+          </div>
+        }}}</pre>
+      </div>
+      <div style = "right:10%;width:40%;position:absolute;background-color:#606060;height:400px;">
+        <pre>
+          <script>
+            a= 1
+            b = ["a","b","c"]
+            ind = 0
+            B = b[ind]
+            c = {'a': 2, 'b': 3}
+            d = ['taco','burrito','pineapple']
+            changeB= ()=>{
+              ind++;
+              B = b[ind%b.length]
+              console.log("changing b")
+            }
+            e = false
+            f = true
+          </script>
+          <b>~a</b></br>
+          <b>~b</b></br>
+          <b>~ind</b> | <b>@ind</b></br>
+          <b>~B</b> | <b>@B</b></br>
+
+          <switch condition=~B >
+            <case val=a >Apple</case>
+            <case val=b >Orange</case>
+            <case val=c >Pear</case>
+          </switch>
+
+          <if condition=~e>e is true</if>
+          <if condition=~f>f is true</if>
+
+          <button onclick="changeB()">changeB()</button>
+        </pre>
+        <div style = "margin-left:25%">
+          <for var=~i range=2>
+            <div><for var=~j range=5>{{~i*~j}}</for> </div>
+          </for>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script  src= '../js/templateroo.js'></script>
+</html>
