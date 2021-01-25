@@ -619,4 +619,4 @@ var templateroo = {
 `
 }
 
-exports = templateroo
+module.exports = templateroo
