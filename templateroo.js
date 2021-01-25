@@ -626,8 +626,54 @@ var addTemplaterooClentSide= (htmlContent)=>{
   return htmlContent + '<script>'+ templaterooString + '</script>' + '<script>templateroo.createDocument();</script>'
 }
 
+var exampleRender = `
+  //to render example with a node server...
+  //copy the following into app.js
+  //in command line run npm app.js
+  //in Chrome, open http:/localhost:3000/
+
+  const http = require('http')
+
+  //create a server object:
+  http.createServer(function (req, res) {
+    response.writeHead(200, { 'Content-Type': 'text/html' });
+    response.end(templateroo.exampleHTML, 'utf-8');
+    res.end(); //end the response
+  }).listen(8080); //the server object listens on port 8080
+`
+var exampleFileRender = `
+  //to render files with a node server...
+  //copy the following into app.js
+  //in command line run npm app.js
+  //in Chrome, open http:/localhost:3000/myFileName.html
+
+  const http = require('http')
+  const fs = require('fs')
+
+  const server = http.createServer(function (request, response) {
+    let filePath = '.' + request.url
+    fs.readFile(filePath, function(error, content) {
+      if (!error){
+        response.writeHead(200, { 'Content-Type': 'text/html' });
+        response.end(templateroo.template(content), 'utf-8');
+      }
+    });
+  })
+  server.listen(port, hostname, () => {})
+`
+
+var help = ()=>{
+  console.log("to run example, render templateroo.exampleHTML")
+  console.log("to load html string, render templateroo.template('somehtmlcontent')")
+  console.log(exampleRender)
+  console.log(exampleFileRender)
+}
+
 module.exports = {
   template: addTemplaterooClentSide,
-  exampleHTML: exampleHTML,
-  loadExample: addTemplaterooClentSide(exampleHTML)
+  exampleHTMLTemplate: exampleHTML,
+  exampleHTML: addTemplaterooClentSide(exampleHTML),
+  exampleRender: exampleRender,
+  exampleFileRender: exampleFileRender,
+  help: help
 }
