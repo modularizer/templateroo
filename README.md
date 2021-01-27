@@ -4,7 +4,7 @@ Templateroo is a **client-side html templating** package, written in pure javasc
 
 ## How to Import
 ###  Html
-To import the templateroo object into your html code, paste the following into anywhere in your html document **or** copy and paste the contents of the link into a `<script></script>`element.
+To import the templateroo object into your html code, paste the following into anywhere in your html document **or** copy and paste the contents of the link into a `<script>`element.
 
     <script src='http://github.com/geargaroo/templateroo/clientSide/templateroo.js></script>
 After importing, run the templating function as follows:
@@ -93,15 +93,16 @@ The `<for>` tag expects the following attributes:
  - **list**: can be used *instead* of range, var will iterate through list using *of*
 
 
-    `<for range=3>a</for>`=>`aaa`
-    `<for list=[a,b,c]>a</for>`=>`aaa`
-    `<for var=~x range=3>~x</for>`=> `012`
-    `<for var=~x range=[1,2]>~x</for>`=>`123`
-    `<for var=~x range=[1,5,2]>~x</for>`=>`135`
-   `<for var=~x list=[a,b,c]>~x</for>` => `abc`
+    ```
+    <for range=3>a</for>  =>  aaa
+    <for list=[a,b,c]>a</for>  => aaa
+    <for var=~x range=3>~x</for>  => 012
+    <for var=~x range=[1,2]>~x</for>  =>  123
+    <for var=~x range=[1,5,2]>~x</for>  =>  135
+    <for var=~x list=[a,b,c]>~x</for>  => abc
+    ```
 
 ### if
-####
 The `<if>` tag expects the folowing attributes:
 
  - **condition**: should evaluate to true and false. If true, innerHTML is rendered, if false, empty string is rendered. Not yet working with active variables, but will be implemented soon.
@@ -184,8 +185,8 @@ Yaml templating is a work in progress  which allows templating with yml instead 
 JSON tempating is a work in progress  which allows templating with JSON/js objects instead of html. See clientSide/json
 
 ## Tests and Demos
-A barebones example is available in clientSide/example.html. I will work to develop this further and make more demos.
+A barebones example is available in [clientSide/example.html](http://github.com/geargaroo/templateroo/clientSide/example.html). I will work to develop this further and make more demos.
 
 ## Suggestions/Questions
 If you have questions about use or suggestions for future development, please let me know
-`geargarooco@gmail.com`
+[`geargarooco@gmail.com`](https://mail.google.com/mail/u/0/?fs=1&view=cm&shva=1&to=geargarooco@gmail.com&su=Templateroo:%20Questions/Suggestions&tf=1&body=Hi%20Torin,)
