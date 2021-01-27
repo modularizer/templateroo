@@ -1,14 +1,14 @@
 {
   "name": "templateroo",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Client side html templating app with for, if, switch, and auto-refresh capabilites, written in pure JS with no dependencies. ",
-  "main": "serverSide/templateroo.js",
+  "main": "templateroo.js",
   "scripts": {
     "test": "templateroo.help()"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/geargaroo/templateroo.git"
+    "url": "git+https://github.com/geargaroo/templateroo/pseudoServerSide.git"
   },
   "keywords": [
     "client side",
