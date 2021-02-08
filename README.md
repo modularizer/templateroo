@@ -1,6 +1,20 @@
 # Welcome to Templateroo!
 
-Templateroo is a **client-side html templating** package, written in pure javascript with no dependencies. The purpose of this package is to improve the html experience to make it quicker and easier to edit webpages or offline html files.
+Templateroo is an open-source **client-side html templating** package, written in pure javascript with no dependencies. The purpose of this package is to improve the html experience to make it quicker and easier to edit webpages or offline html files. The current features are as follows:
+
+ - **variable replacement:** easily use your javascript `window` variables in html and the webpage will automatically update when they change
+ - **custom tags & code blocks:** create block of code which can be reused and changed using a custom html tag
+ - **for, if, switch tags:** use for, if, and switch statements to make repetitive html much more compact
+ - **static svg favicon:** easily add an svg as the favicon (icon at top of browser tab) to make your website or static html page look more professional
+ - **eval:** evaluate js text when rendering
+
+## Learn
+I am currently working on developing examples to teach templateroo to users. For now, a few examples I made for debugging are available in [examples](https://github.com/geargaroo/templateroo/examples) and can be rendered here:
+
+ - https://geargaroo.github.io/templateroo/examples/test.html
+ - https://geargaroo.github.io/templateroo/examples/examples.html
+
+
 
 ## How to Import
 ###  Html
