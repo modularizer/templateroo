@@ -53,6 +53,13 @@ var templateroo = {
     faviconsvg: {
       tagName: 'faviconsvg'
     },
+    scrape: {
+      tagName: 'scrape',
+      attrNames: {
+        src: 'src',
+        query: 'query'
+      }
+    },
     template: {
       tagName: 'html'
     },
@@ -83,7 +90,8 @@ var templateroo = {
       },
       els: []
     },
-    custom: {},
+    custom: {},//store custom tags
+    async: {},//store async requests
   },
   genericTools: {//functions that are in no way specify to templateroo
     escape: {//string escape functions
@@ -167,7 +175,8 @@ var templateroo = {
           of any Object*/
           let val = varObj[varName]
           delete varObj[varName]
-          console.log("adding cbs to ", varName)
+          // console.log("val=", varObj[varName])
+          console.log(`adding callback functions to variable "${varName}"`)
           Object.defineProperty(varObj, varName,{
             set: (v)=>{
               let o = this['_'+ varName]
@@ -349,19 +358,6 @@ var templateroo = {
       /*find unique values in a list*/
       return arr.filter((v, i, a) => a.indexOf(v) === i)
     },
-    http: {
-      get: (url, cb=console.log, async=true)=>{
-        var xhttp = new XMLHttpRequest();
-        let r = xhttp.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-            return cb(xhttp.responseText)
-          }
-        };
-        xhttp.open("GET", url, async);
-        xhttp.send();
-        return r
-      }
-    }
   },
   tools: {//adapts the genericTools functions for easier usage
     find: {//Object containing string search functions
@@ -503,7 +499,89 @@ var templateroo = {
     },
     init: ()=>{
       templateroo.genericTools.escape.set(templateroo.settings.staticVarReplacement.varHandle, templateroo.settings.activeVarReplacement.varHandle)
-      // console.log("ce=",templateroo.genericTools.escape.customEscapes)
+    },
+    async: {
+      makeID: (url)=>`asyncResponses["${url}"]`,
+      isRequest: (url)=>Object.keys(templateroo.state.async).includes(url),
+      isID: (id)=>{
+        let m = id.match(/asyncResponses\["([^]*?)"\]/)
+        // console.log("m=", m)
+        if (m){
+          let url = m.pop()
+          // console.log(url)
+          // console.log(templateroo.tools.async.isRequest(url))
+          return templateroo.tools.async.isRequest(url)
+        }else{
+          return false
+        }
+      },
+      set: (url, response)=>{
+        let id = templateroo.tools.async.makeID(url)
+        let className = templateroo.tools.async.getClass(id)
+        templateroo.state.async[url]= response
+        // console.log("id=", id)
+        let els = Array.from(document.getElementsByClassName(className))
+        els.map((el)=>{
+          let o = el.outerHTML
+          o = o.replaceAll(id, response)
+          el.outerHTML = o
+          // console.log("el=", el)
+        })
+      },
+      add: (url)=>{
+        if (!templateroo.tools.async.isRequest(url)){
+          templateroo.state.async[url] = false
+        }
+      },
+      getClass: (id)=>{
+        let m = templateroo.settings.activeVarReplacement.varClass
+        return m.replace('x',id)
+      }
+    },
+    http: {//tools for making http requests
+      iframeGet: (url, cb=()=>{})=>{
+        let id = templateroo.tools.async.makeID(url)
+        var iframe=document.createElement("iframe");
+        let r;
+        templateroo.tools.async.add(url)
+        iframe.onload=()=>{
+          r = iframe.contentWindow.document.body.innerHTML;
+          templateroo.tools.async.set(r)
+          cb(r)
+        }
+        iframe.src=url;
+        iframe.style.display="none";
+        document.body.appendChild(iframe);
+        let className = templateroo.tools.async.getClass(id)
+        return [id, className]
+      },
+      get: (url, cb=()=>{}, async=true)=>{
+        let id = templateroo.tools.async.makeID(url)
+        let r;
+        var xhttp = new XMLHttpRequest();
+        if (async){
+          templateroo.tools.async.add(url)
+        }
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            if (async){
+              templateroo.tools.async.set(url, xhttp.responseText)
+            }
+            cb(xhttp.responseText)
+            r = xhttp.responseText
+          }
+        };
+
+
+        xhttp.open("GET", url, async);
+        xhttp.send();
+        if (async){
+          let className = templateroo.tools.async.getClass(id)
+          return [id, className]
+        }else{
+          return r
+        }
+      },
     },
   },
   features: {//functions central to the templating features
@@ -830,7 +908,7 @@ var templateroo = {
         }
       }
     },
-    custom: {
+    custom: {//create and use code blocks in custom tags
       replace: {
         el: (el)=>templateroo.features._generic.replace.el(el, 'custom'),
         string: (s)=>{
@@ -881,7 +959,7 @@ var templateroo = {
               let group = groups[i]
               group.map(o=>{
                 let [e,r] = f(o)
-                console.log({e,r,s})
+                // console.log({e,r,s})
                 s = s.replaceAll(e,r)
                 // console.log(s)
               })
@@ -897,7 +975,7 @@ var templateroo = {
             let attrs = Object.keys(elAttrObj)
             if (tags.includes(tag)){
               let temp = templateroo.state.custom[tag].innerHTML
-              let params = templateroo.state.custom[tag].params
+              let params = Object.assign({},templateroo.state.custom[tag].params)
               for (let [param, val] of Object.entries(params)){
                 if (attrs.includes(param)){
                   params[param] = elAttrObj[param]
@@ -905,8 +983,8 @@ var templateroo = {
               }
               params[templateroo.settings.custom.innerHandle] = elAttrObj.innerHTML
               let out = templateroo.features.custom.customTags._replaceAttributes(temp, params)
-              console.log("matches=", r.match(new RegExp(`>[^]*?<\\/${tag}>`, 'g')))
-              console.log(`>${out}</${tag}>`)
+              // console.log("matches=", r.match(new RegExp(`>[^]*?<\\/${tag}>`, 'g')))
+              // console.log(`>${out}</${tag}>`)
               r = r.replace(new RegExp(`>[^]*?<\\/${tag}>`, 'g'), `>${out}</${tag}>`)
 
               if (!elAttrObj.initialhtml){//if initialhtml is not present, escape and add
@@ -919,7 +997,7 @@ var templateroo = {
           }
         },
         _replaceAttributes: (s, varObj)=>{
-          console.log(varObj)
+          // console.log(varObj)
           let varHandle = templateroo.settings.custom.attrHandle
           // console.log("varHandle=", varHandle)
           let pvns = templateroo.tools.find.varNames._findVarNames(s, varHandle, false)
@@ -938,6 +1016,64 @@ var templateroo = {
           s = templateroo.genericTools.escape.generic(s, v)
           // console.log("s_out=", s)
           return s
+        }
+      }
+    },
+    faviconsvg: {//add an svg as the site favicon
+      make: (svgInnerHTML)=>{
+        let encoded = encodeURIComponent(svgInnerHTML)
+        let el = document.createElement('link')
+        el.setAttribute('rel','icon')
+        el.setAttribute('type', "image/svg+xml")
+        el.setAttribute('href', `data:image/svg+xml,${encoded}`)
+        return el
+      },
+      makeEl : ()=>{
+        let tgn = templateroo.settings.faviconsvg.tagName
+        let els = Array.from(document.getElementsByTagName(tgn))
+        let el
+        if (els){
+          let favEl = els[0]
+          if (favEl){
+            let url = favEl.attributes.src.value
+            let elString;
+            templateroo.tools.http.get(url, (svgInnerHTML)=>{
+              el = templateroo.features.faviconsvg.make(svgInnerHTML)
+            }, false)
+          }
+        }
+        return el
+      },
+      init: ()=>{
+        let el = templateroo.features.faviconsvg.makeEl()
+        document.head.append(el)
+      }
+    },
+    scrape: {//scrape data from a web request
+      init: ()=>{
+        let els = Array.from(document.getElementsByTagName(templateroo.settings.scrape.tagName))
+        els.map(templateroo.features.scrape.replace.el)
+      },
+      replace: {
+        el: (el)=>{
+          console.log(el)
+          let elAttrObj = templateroo.genericTools.dom.attrObj(el)
+          console.log(elAttrObj)
+          let src = elAttrObj[templateroo.settings.scrape.attrNames.src]
+          let query = elAttrObj[templateroo.settings.scrape.attrNames.query]
+          let get = templateroo.tools.http.iframeGet
+          if (src){
+            console.log("src=", src)
+            let [requestID, requestClass] = get(src, console.log)
+            el.innerHTML = requestID
+
+            let c = ''
+            if (elAttrObj.class){
+              c = elAttrObj.class
+            }
+            c += ` ${requestClass}`
+            el.setAttribute('class', c)
+          }
         }
       }
     },
@@ -985,38 +1121,9 @@ var templateroo = {
             document.write(s)
             templateroo.state = state
             templateroo.features.faviconsvg.init()
+            templateroo.features.scrape.init()
           }
         }
-      }
-    },
-    faviconsvg: {
-      make: (svgInnerHTML)=>{
-        let encoded = encodeURIComponent(svgInnerHTML)
-        let el = document.createElement('link')
-        el.setAttribute('rel','icon')
-        el.setAttribute('type', "image/svg+xml")
-        el.setAttribute('href', `data:image/svg+xml,${encoded}`)
-        return el
-      },
-      makeEl : ()=>{
-        let tgn = templateroo.settings.faviconsvg.tagName
-        let els = Array.from(document.getElementsByTagName(tgn))
-        let el
-        if (els){
-          let favEl = els[0]
-          if (favEl){
-            let url = favEl.attributes.src.value
-            let elString;
-            templateroo.genericTools.http.get(url, (svgInnerHTML)=>{
-              el = templateroo.features.faviconsvg.make(svgInnerHTML)
-            }, false)
-          }
-        }
-        return el
-      },
-      init: ()=>{
-        let el = templateroo.features.faviconsvg.makeEl()
-        document.head.append(el)
       }
     },
     _generic: {//generic functions used for multiple custom tags
