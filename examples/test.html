@@ -1,0 +1,60 @@
+<!doctype html>
+  <html>
+    <head>
+      <title>templateroo</title>
+      <style type="text/css">
+        .hidden {
+          display: none;
+        }
+      </style>
+      <script src = <script src = 'http://github.com/geargaroo/templateroo/templateroo.js'></script>></script>
+      <faviconsvg src ='http://github.com/geargaroo/templateroo/mySVGFavicon.svg'</faviconsvg>
+    </head>
+
+    <body>
+      <script>
+        a = 5
+        x = 0
+        y= 0
+        z= 0
+        b= 'b'
+        c = [false, true]
+        d = {'a': 1, 'b': 2}
+      </script>
+
+      <eval>2+2</eval>
+      <div>abc</div>
+      <for var=~i range=@a>~i</for>
+      <br>
+      <for var=~y list=["a",2,"c"]>~y</for>
+      <br>
+      <for var=~y list=["a",2,"c"]>~y</for>
+      <br>
+      ~a, @a
+      <br>
+      <switch condition = ~b>
+        <case val = 'b'>B</case>
+        <case val = 'c'>C</case>
+      </switch>
+      <if condition= ~c[0]>C[0] is true</if>
+      <if condition= ~c[1]>C[1] is true</if>
+      <br>
+      ~d['a'], ~d.b
+      <button onclick="a++">a++</button>
+      <esc>~a,@a</esc>
+      <hr>
+
+      <custom tag= 'first' var='a' text='hi' show>
+        <hr>
+        <button onclick="~var++">~text</button>
+        <br>
+        <b>~var=</b>@~var
+        <br>
+        ~content
+        <hr>
+      </custom>
+      <first var='x' text = 'x++'>inner text</first>
+      <first var='y' text = 'y++'>sadafsd</first>
+      <first var='z' text = 'z++'>taco</first>
+    </body>
+  </html>

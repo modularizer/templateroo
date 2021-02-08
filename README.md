@@ -6,59 +6,22 @@ Templateroo is a **client-side html templating** package, written in pure javasc
 ###  Html
 To import the templateroo object into your html code, paste the following into anywhere in your html document **or** copy and paste the contents of the link into a `<script>`element.
 
-    <script src='http://github.com/geargaroo/templateroo/clientSide/templateroo.js></script>
-After importing, run the templating function as follows:
+    <script src='http://github.com/geargaroo/templateroo/templateroo.js></script>
+This script element will by default run the templating code to change the html of the current **document**. If you wish to get the templateroo object without executing this code, include the attribute `init=false` in the`<script>` tag:
 
 
 
-    <script>templateroo.createDocument()</script>
+    <script init=false src='http://github.com/geargaroo/templateroo/templateroo.js></script>
 
+# Features
+## variable replacement
+Templateroo offers both static and active variable replacement to make it easy to parameterize your document. This works by identifying variable names using a handle specified in `templateroo.settings` and replacing each instance with the value of the variable.
 
+By default, variable replacement is implemented using the `window` object and therefore only **works on window-scoped variables. Therefore, do not use the `var` initializer** when creating variables in html inside of `<script>` elements .
 
-### Node.js
-The contents of http:/github/pseudoServerSide is available on Node.js. Please note the folder name **pseudo**ServerSide. Because Node.js is a server-side application, this implementation works by appending the contents of the templateroo object appended as a string at the end of the html. The code will still run on client-side and thus security issues could arise.
+Alternatively, if you wish to use another object containing the variables for replacement, edit `templateroo.settings.varObj=window`
 
-    npm i templateroo
- After install, import as follows:
- ```
- const templater== = require('templateroo')
- ```
-
- Use as follows:
- ```
-//to render files with a node server...
-//copy the following into app.js
-//in command line run npm app.js
-//in Chrome, open http:/localhost:3000/myFileName.html
-
-const http = require('http')
-const fs = require('fs')
-const templateroo = require('templateroo')
-
-const server = http.createServer(function (request, response) {
-  let filePath = '.' + request.url
-  fs.readFile(filePath, function(error, content) {
-    if (!error){
-      response.writeHead(200, { 'Content-Type': 'text/html' });
-      response.end(templateroo.template(content), 'utf-8');
-    }
-  });
-})
-server.listen(port, hostname, () => {})
-```
-
-## Implementations
-There are currently **three implementations** of this code: clientSide, pseudoServerSide, clientSide/jsonyaml. All updates will be made first to clientSide. Json and yaml templating work well but likely will not be updated soon if at all. psuedoServerSide is a bit hacky. Hopefully I will find a better way to make this available on **Node.js**.
-
-## Features
-
-### variable replacement
-Templateroo includes both static and active variable replacement, although the active variable replacement is still partially a work in progress and needs some development in nested cases.
-
- - **~myStaticVar**: this variable will be replaced when the page is rendered and not updated again
- - **@myActiveVar**: this variable will be replaced when the page is rendered and updated if the value changes
-
-**Note: variable replacement is implemented using the window object and therefore only works on window-scoped variables. If creating variables in html inside `<script>` element, do not use **var** initializer
+**Example:**
 ```
 <script>
 	x = 0;
@@ -69,43 +32,74 @@ For instance if this button is pressed:
 <button onchange="()=>{x++}">Increase x</button
 ```
 
-### eval
-The inner contents between`{{` and `}}` will be evaluated using the js `eval()` function.
-```
-<script>
-	x=2
-</script>
-{{x+2}} <!-- renders as 4 -->
-```
-
-### escape
-Contents between `{{{` and `}}}` will be escaped for both html and for templateroo keywords. Therefore, the following will be printed as strings and their contents will not be affected.
-```
-~, @, {{}}, <, >, ", ', {{{}}}
-```
+## static variable replacement
+Static variable replacement can be used for variables which do not need to be actively changed. For these variables, variable handles will be replaced with the value of the variable at the time the page is loaded and the element will not update if the variable changes.
 
 
-### for
+To change default handler from **~** to your custom identifier, edit
+
+    templateroo.settings.staticVarReplacement.varHandle = '~'
+**Example:**
+| html | rendered |
+|--|--|
+| `<script>a=5</script>`a=~a | a=5 |
+
+
+## active variable replacement
+Active variable replacement works by setting classes to identify which html elements are dependent upon each active variable, and will reload the dependent elements only (not the whole page) when the variable changes.
+
+
+To change default handler from **@** to your custom identifier, edit
+
+    templateroo.settings.activeVarReplacement.varHandle = '@'
+ **Example:**
+ | html | rendered |
+|--|--|
+| `<script>a=6</script>`a=@a | a=6 |
+
+
+## eval
+The inner contents of the `<eval>` tg  will be evaluated using the js `eval()` function.
+
+**Example:**
+ | html | rendered |
+|--|--|
+| `<script>x=2</script><eval>x+2<eval>` | 4 |
+
+
+## escape
+Inner contents of the `<esc>` tag will be escaped for both html and for templateroo keywords. Therefore, the following will be printed as strings and their contents will not be affected.  `~, @, <, >, ", '`. Additionally, other features such as variable replacement, eval, if, switch, for, etc. will not be executed on contents.
+
+**Example:**
+ | html | rendered |
+|--|--|
+| `<script>x=2</script><esc><eval>x+2<eval></esc>` | x+2 |
+
+
+## for
 The `<for>` tag expects the following attributes:
 
  - **var**: specify the string to be used for string replacement
  - **range**: can take one two or three inputs, mirrors range() in python
  - **list**: can be used *instead* of range, var will iterate through list using *of*
 
+**Example:**
+ | html | rendered |
+|--|--|
+| `<for range=3>a</for>` | aaa |
+| `<for list=[a,b,c]>a</for>` | aaa |
+| `<for var=y list=[a,b,c]>~y</for>` | abc |
+| `<for var=x range=3>x</for>` | 012 |
+| `<for var=x range=[1,3]>x</for>` | 123 |
+| `<for var=x range=[1,5,2]>x</for>` | 135 |
 
-    ```
-    <for range=3>a</for>  =>  aaa
-    <for list=[a,b,c]>a</for>  => aaa
-    <for var=~x range=3>~x</for>  => 012
-    <for var=~x range=[1,2]>~x</for>  =>  123
-    <for var=~x range=[1,5,2]>~x</for>  =>  135
-    <for var=~x list=[a,b,c]>~x</for>  => abc
-    ```
-
-### if
+## if
 The `<if>` tag expects the folowing attributes:
 
- - **condition**: should evaluate to true and false. If true, innerHTML is rendered, if false, empty string is rendered. Not yet working with active variables, but will be implemented soon.
+ - **condition**: should evaluate to true and false. If true, innerHTML is rendered, if false, empty string is rendered.
+
+**Example:**
+
  ```
  <script>
 	 x=true
@@ -119,10 +113,12 @@ The `<if>` tag expects the folowing attributes:
 </if>
 ```
 
-**else and else if** tags are planned but not yet implemented
+**else and else if** tags are planned but not yet implemented. For now, switch/case should accomplish similar functionality.
 
-### switch/case
+## switch/case
 The `<switch>` tag expects a **condition** attribute and children `<case>` elements with **val** attributes to compare condition to. Only the innerHTML of the matching `<case>` element is rendered.
+
+**Example:**
 ```
 <script>
 	x = 'b'
@@ -133,59 +129,152 @@ The `<switch>` tag expects a **condition** attribute and children `<case>` eleme
 	<case val=c>But this won't</case>
 </switch>
 ```
-## Custom RegExps
-The features listed above use Regular Expressions for string replacements. If for whatever reason the formulas cause issues for you, they can easily be modified at the top of the templateroo object (templateroo.modes) **or** modified using inputs to the templateroo.createDocument()  or templateroo.replace() function
+## custom
+Perhaps the most powerful of all of the features of templateroo, the `<custom>` tag is a good one to learn. The `<custom>` tags allows the user to create custom tags to reuse *similar* elements with custom parameters in multiple places on the page. These tags may be used in similar instances to `<for>` tags, but have the advantages of being able to take many variables and not having to be consecutive in the html. The custom tags are templated first (after escape), and there elements can include all other features inside of them. Nesting custom tags is untested, but development is planned.
+
+The `<custom>` tag can be placed in any location of the html, and by default does not render itself, only instances of the custom tag which it defines. However, if the `show` attribute is included, the initial instance will render.
+
+Note: **tagnames must be lowercase**.
+
+**Example:**
+
+Define a custom tag as follows below. The `tag` and `show` attribute names are reserved (show is optional),  as is the `~content` parameter. All other attributes set the parameters and default values of the element. `~content` will be replaced by the innerHTML of the instances of this custom element.
+
+    <custom tag= 'first' var='a' text='hi' show>
+      <hr>
+      <button onclick="~var++">~text</button>
+      <br>
+      <b>~var=</b>@~var
+      <br>
+      <for range=@~var>a</for>
+      <br>
+      ~content
+      <hr>
+    </custom>
+
+  Now, to create for instances of the `<first>` element defined above, simply use the tag and pass in as many of the parameters (`var` or `text` in this case) as desired.
+
+
+
+    <first var='x' text = 'x++'>inner text</first>
+    <first var='y' text = 'y++'>sadafsd</first>
+    <first var='z' text = 'z++'>taco</first>
+
+## faviconsvg
+One of my pet peeves when debugging code locally in the brower, is the repeated error:
+ `GET myfile.html/favicon.ico 404 (Not Found)  favicon.ico:1`
+
+When you are using a server, it is pretty straightforward to set the favicon.ico image, but on a static html document this is not as straightforward. Using the stackedit response [here](https://stackoverflow.com/questions/5199902/isnt-it-silly-that-a-tiny-favicon-requires-yet-another-http-request-how-can-i#answer-62438464), I discovered that svg data can be pasted into the `href` attribute of a `<link rel='icon' type="image/svg+xml" />` element to set the favicon. Additionally, the data from user svg files made available to the server can be retrievered through `xhttp` requests and then converted to a data uri using `encodeURIComponent("<svg>...</svg>")` .
+
+**Usage:**
+
+ 1. `src` attribute: link to an svg
+ 2. innerHTML: add svg inlinein innerHTML of `<faviconsvg>`
+ 3. defaults: `text`, `circle`,`color` attributes are builtin to allow user to easily set a colorful circle or letter, with default of a blue circle
+ 4. shortened svg: `default` attribute will nest innerHTML inside of `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'></svg>`
+ 5.
+**Examples:**
+ | html | rendered |
+|--|--|
+| `<faviconsvg src = 'myFile.svg'></faviconsvg>` | my image |
+| `<faviconsvg></faviconsvg>` | blue circle |
+| `<faviconsvg text = A></faviconsvg>` | blue A |
+| `<faviconsvg text = A color=red></faviconsvg>` | red A |
+| `<faviconsvg circle=red></faviconsvg>`| red circle |
+| `<faviconsvg default><rect x="5" width="10" height="100" rx="15" /></faviconsvg>` | rectangle  |
+
+## template
+All of the features below are referred to as templating features. By default, the entire page will be templated, but if you m=wish to only template a section, edit
+
+    templateroo.settings.template.tagName = 'html'
+ to
+
+
+    templateroo.settings.template.tagName = 'templateroo'
+ and wrap anything you want templated with `<templateroo></templateroo>`
+
+
+# Settings
+The features listed above use Regular Expressions for string replacements. If for whatever reason the formulas cause issues for you, they can easily be modified at the top of the templateroo object in `templateroo.settings`
 ```
 var templateroo = {
-  modes: {
-    varMode:'~x',
-    activeVarMode: '@x',
-    evalMode: '{{x}}',
-    escapeMode: '{{{x}}}',
-    forMode: '<key~x</key>',
-    varObj: window,
-  },
-```
-...
-```
-replace: (s, modes={})=>{
-    let m = Object.assign(templateroo.modes, modes)
-    s = templateroo.escapeHTML(s, m.escapeMode)
-    s = templateroo.initialVarReplace(s, m.varObj, m.varMode);
-    s = templateroo.initialVarReplace(s, m.varObj, m.activeVarMode, true)
-    s = templateroo.replaceConditionals(s, m.conditionalMode)
-    s = templateroo.evalReplace(s, m.evalMode);
-    return s
+  settings: {//user parameters, allows you to change names of tags and attributes as well as source of variables
+    staticVarReplacement: {
+      varHandle: '~x',
+    },
+    activeVarReplacement: {
+      varHandle: '@x',
+      varClass: '.x',
+      labelTagName: 'label',
+    },
+    for: {
+      tagName: 'for',
+      attrNames: {
+        handle: 'var',
+        range: 'range',
+        array: 'list'
+      },
+      varHandle: '~x'
+    },
+    if: {
+      tagName: 'if',
+      attrNames: {
+        condition: 'condition'
+      }
+    },
+    switch: {
+      tagName: 'switch',
+      attrNames: {
+        condition: 'condition'
+      },
+      case: {
+        tagName: 'case',
+        attrNames: {
+          value: 'val'
+        }
+      }
+    },
+    eval: {
+      tagName: 'eval'
+    },
+    escape: {
+      tagName: 'esc',
+    },
+    custom: {
+      tagName: 'custom',
+      attrNames: {
+        tagName: 'tag',
+        showTemplate: 'show'
+      },
+      attrHandle: '~x',
+      innerHandle: 'content',
+      alwaysShowTemplate: false,
+    },
+    faviconsvg: {
+      tagName: 'faviconsvg'
+    },
+    template: {
+      tagName: 'html'
+    },
+    varObj: window, //object which contains all of the variables which you wish to use for variable replacement
   },
 ```
 
-## In Progress
-**active variable replacement**: Currently only works in simple versions of inner HTML. If used for tags or attributes or inside of custom elements like `<for>` or `<if>`
 
 ## Planned Additions
+### **`<scrape>`**:
+load and scrape a webpage, update at some specified interval
+
 ### **`<demo>`**
 for translating code blocks to-from templating and rendering html
-
-### **`<templateroo>`**:
-plan to allowthe templating function to be implemented for select elements only
 
 ### **`<elseif>`**,  **`<else>`**:
 planned for use with `<if>` tag
 
-### **`<while>`**:
- may implement in cases of iteration, for use with active variables, or for use with timeouts and intervals
 
-### **`<varblock>`**:
- plan to allow html block to be named and re-used
-
-### **`<yaml`>**
-Yaml templating is a work in progress  which allows templating with yml instead of html. See clientSide/yaml
-
-### **`<json>`**
-JSON tempating is a work in progress  which allows templating with JSON/js objects instead of html. See clientSide/json
 
 ## Tests and Demos
-A barebones example is available in [clientSide/example.html](http://github.com/geargaroo/templateroo/clientSide/example.html). I will work to develop this further and make more demos.
+A few barebones examples are available in [examples](http://github.com/geargaroo/templateroo/examples). I will work to develop this further and make more demos.
 
 ## Suggestions/Questions
 If you have questions about use or suggestions for future development, please let me know
