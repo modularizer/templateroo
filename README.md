@@ -6,12 +6,12 @@ Templateroo is a **client-side html templating** package, written in pure javasc
 ###  Html
 To import the templateroo object into your html code, paste the following into anywhere in your html document **or** copy and paste the contents of the link into a `<script>`element.
 
-    <script src='http://github.com/geargaroo/templateroo/templateroo.js></script>
+    <script src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
 This script element will by default run the templating code to change the html of the current **document**. If you wish to get the templateroo object without executing this code, include the attribute `init=false` in the`<script>` tag:
 
 
 
-    <script init=false src='http://github.com/geargaroo/templateroo/templateroo.js></script>
+    <script init=false src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
 
 # Features
 ## variable replacement
@@ -176,7 +176,7 @@ When you are using a server, it is pretty straightforward to set the favicon.ico
 **Examples:**
  | html | rendered |
 |--|--|
-| `<faviconsvg src = 'myFile.svg'></faviconsvg>` | my image |
+| `<faviconsvg src ='https://geargaroo.github.io/templateroo/mySVGFavicon.svg'></faviconsvg>` | my image |
 | `<faviconsvg></faviconsvg>` | blue circle |
 | `<faviconsvg text = A></faviconsvg>` | blue A |
 | `<faviconsvg text = A color=red></faviconsvg>` | red A |
