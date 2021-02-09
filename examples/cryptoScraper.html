@@ -1,0 +1,23 @@
+<!doctype html>
+  <html>
+    <head>
+      <title>templateroo</title>
+      <script src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
+      <faviconsvg src ='https://geargaroo.github.io/templateroo/mySVGFavicon.svg'></faviconsvg>
+    </head>
+
+    <body>
+      <custom tag="coin" var="~coinName">
+        <b>~var = </b>
+        <scrape src="https://coinmarketcap.com/currencies/~var/" query = 'div[class="priceValue___11gHJ"]' refresh = 10></scrape>
+        <br>
+      </custom>
+
+      <for var=~coinName list='["bitcoin", "ethereum","litecoin","tezos","algorand"]'>
+        <coin/>
+      </for>
+
+      <coin var=dogecoin />
+
+    </body>
+  </html>

@@ -57,8 +57,13 @@ var templateroo = {
       tagName: 'scrape',
       attrNames: {
         src: 'src',
-        query: 'query'
-      }
+        query: 'query',
+        callback: 'onresponse',
+        refresh: 'refresh',
+        noproxy: 'noproxy',
+      },
+      callbackHandle: '@r',
+      proxy: 'https://api.allorigins.win/raw?url=@encodedURL'
     },
     template: {
       tagName: 'html'
@@ -91,7 +96,6 @@ var templateroo = {
       els: []
     },
     custom: {},//store custom tags
-    async: {},//store async requests
   },
   genericTools: {//functions that are in no way specify to templateroo
     escape: {//string escape functions
@@ -501,86 +505,81 @@ var templateroo = {
       templateroo.genericTools.escape.set(templateroo.settings.staticVarReplacement.varHandle, templateroo.settings.activeVarReplacement.varHandle)
     },
     async: {
-      makeID: (url)=>`asyncResponses["${url}"]`,
-      isRequest: (url)=>Object.keys(templateroo.state.async).includes(url),
-      isID: (id)=>{
-        let m = id.match(/asyncResponses\["([^]*?)"\]/)
-        // console.log("m=", m)
-        if (m){
-          let url = m.pop()
-          // console.log(url)
-          // console.log(templateroo.tools.async.isRequest(url))
-          return templateroo.tools.async.isRequest(url)
-        }else{
-          return false
+      ids: [],
+      params: {},
+      makeID: (url, query='')=>{
+        let id = `${url}.${query}.`
+        let n = templateroo.tools.async.ids.filter(v=>v.includes(id)).length
+        id = id + n
+        templateroo.tools.async.ids.push(id)
+        return id
+      },
+      isID: (id)=>templateroo.tools.async.ids.includes(id),
+      set: (id, response)=>{
+        let el = document.getElementById(id)
+        let elAttrObj = templateroo.genericTools.dom.attrObj(el)
+
+        el.innerHTML = response
+
+        let cbh = templateroo.settings.scrape.callbackHandle
+        let cb = `console.log(${cbh})`
+        if (Object.keys(elAttrObj).includes(templateroo.settings.scrape.callback)){
+          cb = elAttrObj[templateroo.settings.scrape.attrNames.callback]
+        }
+        cb = cb.replaceAll(cbh, "`" + response + "`")
+        try{
+          eval(cb)
+        }catch{
+          console.warn('could not evaluate ', cb)
         }
       },
-      set: (url, response)=>{
-        let id = templateroo.tools.async.makeID(url)
-        let className = templateroo.tools.async.getClass(id)
-        templateroo.state.async[url]= response
-        // console.log("id=", id)
-        let els = Array.from(document.getElementsByClassName(className))
-        els.map((el)=>{
-          let o = el.outerHTML
-          o = o.replaceAll(id, response)
-          el.outerHTML = o
-          // console.log("el=", el)
-        })
-      },
-      add: (url)=>{
-        if (!templateroo.tools.async.isRequest(url)){
-          templateroo.state.async[url] = false
-        }
-      },
-      getClass: (id)=>{
-        let m = templateroo.settings.activeVarReplacement.varClass
-        return m.replace('x',id)
-      }
     },
     http: {//tools for making http requests
-      iframeGet: (url, cb=()=>{})=>{
-        let id = templateroo.tools.async.makeID(url)
-        var iframe=document.createElement("iframe");
-        let r;
-        templateroo.tools.async.add(url)
-        iframe.onload=()=>{
-          r = iframe.contentWindow.document.body.innerHTML;
-          templateroo.tools.async.set(r)
-          cb(r)
+      _get: (url, cb=()=>{}, async=true)=>{
+        var xhttp = new XMLHttpRequest();
+        let r = url
+        xhttp.onload = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            r = xhttp.response
+            console.log("received response from ", url)
+            cb(r)
+          }
+        };
+        xhttp.open("GET", url, async);
+        xhttp.send();
+        return r
+      },
+      scrapeGet: (url, proxy = true, query=false, id=undefined)=>{
+        if (id==undefined){
+          id = templateroo.tools.async.makeID(url, query)
         }
-        iframe.src=url;
-        iframe.style.display="none";
-        document.body.appendChild(iframe);
-        let className = templateroo.tools.async.getClass(id)
-        return [id, className]
+        let r;
+        let cbfn = (s)=>{
+          if (query){
+            let doc = templateroo.genericTools.dom.parse.doc(s)
+            let el = doc.querySelector(query)
+            s = el.outerHTML
+          }
+          r = s
+          templateroo.tools.async.set(id, r)
+        }
+        if (proxy){
+          url = templateroo.settings.scrape.proxy.replace('@encodedURL',encodeURIComponent(url))
+        }
+        templateroo.tools.http._get(url, cbfn)
+        return id
       },
       get: (url, cb=()=>{}, async=true)=>{
         let id = templateroo.tools.async.makeID(url)
         let r;
         var xhttp = new XMLHttpRequest();
-        if (async){
-          templateroo.tools.async.add(url)
-        }
-        xhttp.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-            if (async){
-              templateroo.tools.async.set(url, xhttp.responseText)
-            }
-            cb(xhttp.responseText)
-            r = xhttp.responseText
-          }
-        };
 
-
-        xhttp.open("GET", url, async);
-        xhttp.send();
-        if (async){
-          let className = templateroo.tools.async.getClass(id)
-          return [id, className]
-        }else{
-          return r
+        let cbfn = (s)=>{
+          cb(s)
+          r = s
         }
+        templateroo.tools.http._get(url, cbfn, async)
+        return [r, id][1*async]
       },
     },
   },
@@ -1061,18 +1060,26 @@ var templateroo = {
           console.log(elAttrObj)
           let src = elAttrObj[templateroo.settings.scrape.attrNames.src]
           let query = elAttrObj[templateroo.settings.scrape.attrNames.query]
-          let get = templateroo.tools.http.iframeGet
+          let refresh = elAttrObj[templateroo.settings.scrape.attrNames.refresh]
+          let useProxy= true
+          if (Object.keys(elAttrObj).includes(templateroo.settings.scrape.attrNames.noproxy)){
+            useProxy = false
+          }
+
+          if (Object.keys(elAttrObj).includes(templateroo.settings.scrape.attrNames.refresh) && (refresh == undefined)){
+            refresh = 1
+          }
+          refresh *= 1000
+
+
+          let get = templateroo.tools.http.scrapeGet
           if (src){
             console.log("src=", src)
-            let [requestID, requestClass] = get(src, console.log)
-            el.innerHTML = requestID
-
-            let c = ''
-            if (elAttrObj.class){
-              c = elAttrObj.class
+            let id = get(src, useProxy, query)
+            el.setAttribute('id',id)
+            if (refresh>0){
+              setTimeout(()=>setInterval(()=>get(src, useProxy, query, id), refresh),refresh)
             }
-            c += ` ${requestClass}`
-            el.setAttribute('class', c)
           }
         }
       }

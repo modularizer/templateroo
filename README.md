@@ -6,11 +6,13 @@ Templateroo is an open-source **client-side html templating** package, written i
  - **custom tags & code blocks:** create block of code which can be reused and changed using a custom html tag
  - **for, if, switch tags:** use for, if, and switch statements to make repetitive html much more compact
  - **static svg favicon:** easily add an svg as the favicon (icon at top of browser tab) to make your website or static html page look more professional
+ - **web scraping:** scrape data using web requests
  - **eval:** evaluate js text when rendering
 
 ## Learn
 I am currently working on developing examples to teach templateroo to users. For now, a few examples I made for debugging are available in [examples](https://github.com/geargaroo/templateroo/examples) and can be rendered here:
 
+ - https://geargaroo.github.io/templateroo/examples/cryptoScraper.html
  - https://geargaroo.github.io/templateroo/examples/test.html
  - https://geargaroo.github.io/templateroo/examples/examples.html
 
@@ -197,6 +199,22 @@ When you are using a server, it is pretty straightforward to set the favicon.ico
 | `<faviconsvg circle=red></faviconsvg>`| red circle |
 | `<faviconsvg default><rect x="5" width="10" height="100" rx="15" /></faviconsvg>` | rectangle  |
 
+## scrape
+The `<scrape>` tag allows you to easily gather data using an `XMLHttpRequest` get request on a url. This can be helpful for grabbing data from your own server or scraping information from a webpage (please do so responsibly).  The tag takes the following attributes:
+
+ - **src:** the url to request
+ - **query:** (optional) the [querySelector](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) to use on the returned data (e.g. "div[class="myClassName"]"). If you are gathering data from a webpage, you can use `Ctrl+Shift+C` in Google Chrome to find an element's name and class by hovering over it (e.g. "div.myClassName").
+ - **refresh:** (optional) the refresh rate, in seconds. If this is not included the data will only be requested once when the page is loaded
+ - **noproxy:**(optional) by default, all requests are routed through ` https://api.allorigins.win/raw?url=${encodeURIComponent(url)}` to avoid CORS issues. If you a requesting data from your own server or do not wish to use [allorigins](https://allorigins.win/), simply add the attribute `noproxy` or edit
+
+	`templateroo.settings.scrape.proxy='https://api.allorigins.win/raw?url=@encodedURL'`
+
+**Example:**
+
+    <scrape src="https://coinmarketcap.com/currencies/~var/" query = 'div[class="priceValue___11gHJ"]' refresh = 10></scrape>
+
+
+
 ## template
 All of the features below are referred to as templating features. By default, the entire page will be templated, but if you m=wish to only template a section, edit
 
@@ -276,9 +294,6 @@ var templateroo = {
 
 
 ## Planned Additions
-### **`<scrape>`**:
-load and scrape a webpage, update at some specified interval
-
 ### **`<demo>`**
 for translating code blocks to-from templating and rendering html
 
