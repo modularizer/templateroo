@@ -1,9 +1,6 @@
-<script src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
-<script>
-	console.log('testing')
-	a = 5
-</script>
-a=~a
+<script init=false src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
+<script src = 'https://geargaroo.github.io/templateroo/extended.js'></script>
+<faviconsvg src ='https://geargaroo.github.io/templateroo/mySVGFavicon.svg'></faviconsvg>
 
 # Welcome to Templateroo!
 
@@ -45,15 +42,15 @@ By default, variable replacement is implemented using the `window` object and th
 Alternatively, if you wish to use another object containing the variables for replacement, edit `templateroo.settings.varObj=window`
 
 **Example:**
-```
-<script>
-	x = 0;
-</script>
-This var will not update: <b>~x<br>
-But this var will update if x changes: <b>@x</b><br>
-For instance if this button is pressed:
-<button onchange="()=>{x++}">Increase x</button
-```
+<demo>
+	<script>
+		x = 0;
+	</script>
+	This var will not update: <b>~x<br>
+	But this var will update if x changes: <b>@x</b><br>
+	For instance if this button is pressed:
+	<button onchange="()=>{x++}">Increase x</button
+</demo>
 
 ## static variable replacement
 Static variable replacement can be used for variables which do not need to be actively changed. For these variables, variable handles will be replaced with the value of the variable at the time the page is loaded and the element will not update if the variable changes.
