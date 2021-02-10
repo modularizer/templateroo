@@ -204,10 +204,12 @@ The `<scrape>` tag allows you to easily gather data using an `XMLHttpRequest` ge
 
  - **src:** the url to request
  - **query:** (optional) the [querySelector](https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector) to use on the returned data (e.g. "div[class="myClassName"]"). If you are gathering data from a webpage, you can use `Ctrl+Shift+C` in Google Chrome to find an element's name and class by hovering over it (e.g. "div.myClassName").
+ - **re:** (optional) a regular expression string to be evaluated after the response is queried
  - **refresh:** (optional) the refresh rate, in seconds. If this is not included the data will only be requested once when the page is loaded
  - **noproxy:**(optional) by default, all requests are routed through ` https://api.allorigins.win/raw?url=${encodeURIComponent(url)}` to avoid CORS issues. If you a requesting data from your own server or do not wish to use [allorigins](https://allorigins.win/), simply add the attribute `noproxy` or edit
-
 	`templateroo.settings.scrape.proxy='https://api.allorigins.win/raw?url=@encodedURL'`
+
+ - **onresponse:**  (optional) text string to `eval()` after response is received, has access to variables including `responseText, responseDoc, responseEl, responseJSON`
 
 **Example:**
 
@@ -294,6 +296,9 @@ var templateroo = {
 
 
 ## Planned Additions
+### **`<scrape>`**:
+load and scrape a webpage, update at some specified interval
+
 ### **`<demo>`**
 for translating code blocks to-from templating and rendering html
 

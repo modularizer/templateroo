@@ -61,8 +61,8 @@ var templateroo = {
         callback: 'onresponse',
         refresh: 'refresh',
         noproxy: 'noproxy',
+        regExp: 're'
       },
-      callbackHandle: '@r',
       proxy: 'https://api.allorigins.win/raw?url=@encodedURL'
     },
     template: {
@@ -515,20 +515,29 @@ var templateroo = {
         return id
       },
       isID: (id)=>templateroo.tools.async.ids.includes(id),
-      set: (id, response)=>{
+      set: (id, responseText, responseDoc=false, responseEl=false, responseJSON={})=>{
         let el = document.getElementById(id)
         let elAttrObj = templateroo.genericTools.dom.attrObj(el)
 
-        el.innerHTML = response
+        el.innerHTML = responseText
+        let data = {
+          el: responseEl,
+          response: responseText,
+          doc: responseDoc,
+          json: responseJSON
+        }
 
-        let cbh = templateroo.settings.scrape.callbackHandle
-        let cb = `console.log(${cbh})`
-        if (Object.keys(elAttrObj).includes(templateroo.settings.scrape.callback)){
+        let cb = ""
+        if (Object.keys(elAttrObj).includes(templateroo.settings.scrape.attrNames.callback)){
           cb = elAttrObj[templateroo.settings.scrape.attrNames.callback]
         }
-        cb = cb.replaceAll(cbh, "`" + response + "`")
+
+        for (let [k,v] of Object.entries(data)){
+          cb = cb.replaceAll(k,v)
+        }
         try{
-          eval(cb)
+          console.log(data)
+          console.log(eval(cb))
         }catch{
           console.warn('could not evaluate ', cb)
         }
@@ -549,22 +558,37 @@ var templateroo = {
         xhttp.send();
         return r
       },
-      scrapeGet: (url, proxy = true, query=false, id=undefined)=>{
+      scrapeGet: (url, proxy = true, query=false, re=false, id=undefined)=>{
         if (id==undefined){
           id = templateroo.tools.async.makeID(url, query)
         }
         let r;
         let cbfn = (s)=>{
+          let doc = false
+          try{
+            doc = templateroo.genericTools.dom.parse.doc(s)
+          }catch{}
+
+          let el = false
+          let json = false
           if (query){
-            let doc = templateroo.genericTools.dom.parse.doc(s)
-            let el = doc.querySelector(query)
-            s = el.outerHTML
+            el = doc.querySelector(query)
+            if (el){
+              s = el.outerHTML
+            }
+          }
+          console.log("re=", re, new RegExp(re,'g'))
+          if (re){
+            try{
+              s = s.match(new RegExp(re,'g'))
+            }catch{}
           }
           r = s
-          templateroo.tools.async.set(id, r)
+          templateroo.tools.async.set(id, r, doc, el, json)
         }
         if (proxy){
-          url = templateroo.settings.scrape.proxy.replace('@encodedURL',encodeURIComponent(url))
+          let newurl = templateroo.settings.scrape.proxy.replace('@encodedURL',encodeURIComponent(url))
+          url = newurl.replaceAll('@URL', url)
         }
         templateroo.tools.http._get(url, cbfn)
         return id
@@ -1061,6 +1085,7 @@ var templateroo = {
           let src = elAttrObj[templateroo.settings.scrape.attrNames.src]
           let query = elAttrObj[templateroo.settings.scrape.attrNames.query]
           let refresh = elAttrObj[templateroo.settings.scrape.attrNames.refresh]
+          let re = elAttrObj[templateroo.settings.scrape.attrNames.regExp]
           let useProxy= true
           if (Object.keys(elAttrObj).includes(templateroo.settings.scrape.attrNames.noproxy)){
             useProxy = false
@@ -1075,10 +1100,10 @@ var templateroo = {
           let get = templateroo.tools.http.scrapeGet
           if (src){
             console.log("src=", src)
-            let id = get(src, useProxy, query)
+            let id = get(src, useProxy, query, re)
             el.setAttribute('id',id)
             if (refresh>0){
-              setTimeout(()=>setInterval(()=>get(src, useProxy, query, id), refresh),refresh)
+              setTimeout(()=>setInterval(()=>get(src, useProxy, query, re, id), refresh),refresh)
             }
           }
         }
