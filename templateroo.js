@@ -65,16 +65,6 @@ var templateroo = {
       },
       proxy: 'https://api.allorigins.win/raw?url=@encodedURL'
     },
-    demo: {
-      tagName: 'demo',
-      innerHTML: `
-      <demo>
-        <div style="display:grid;grid: 100% / auto auto;">
-          <pre style='background-color:#beb2aa;padding:20px;height:100%;margin:0;' contenteditable="true" onkeydown="templateroo.features.demo.onkeydown(event)">@escapedInnerHTML</pre>
-          <div style='background-color:#dbd6c8;padding:20px;height:100%;'>@innerHTML</div>
-        </div>
-      </demo>`
-    },
     template: {
       tagName: 'html'
     },
@@ -1128,65 +1118,13 @@ var templateroo = {
         }
       }
     },
-    demo: {
-      onkeydown: (event)=>{
-        if (event.key == 's' && event.ctrlKey){
-          let demoEl = event.path[2]
-          let el = event.path[0]
-          let i = el.innerHTML
-          i = i.replaceAll('&gt\n', '&gt')
-          i = i.replaceAll('\n&lt/','&lt/')
-          i = i.replaceAll('"',"&quot;")
-          // let t = templateroo.genericTools.re.nested.sortedGroups(i,'"','"')
-          i = templateroo.tools.unescape(i)
-          console.log(i)
-          console.log(templateroo.genericTools.dom.parse.el(i))
-          i = templateroo.features.template.replace.string(i)
-          console.log("i=",i)
-          event.preventDefault()
-        }
-      },
-      replace: {
-        el: (e)=>templateroo.features.demo.replace.elAttrObj(el),
-        elAttrObj: (elAttrObj)=>{
-          /*find the replacement string for a DOM element
-          or elementAttributeObject (made in genericTools.dom.elAttrObj)*/
-          // let entire = elAttrObj.outerHTML.replaceAll('&amp;','&')
-          let entire = elAttrObj.outerHTML
-          let r = templateroo.tools.escape(entire)
-          return [entire, r]
-        },
-        string: (s)=>{
-          /*escape text within escape tags so it
-          is not affected by future operations*/
-          let tools = templateroo.tools
-          let tag = templateroo.settings.demo.tagName
-          let outer = templateroo.tools.find.tag(s, tag,0)
-          // console.log("escape outer=", outer)
-          outer.map(o=>{
-            let i = templateroo.genericTools.dom.parse.el(o).innerHTML.trim()
-            let demo = templateroo.settings.demo.innerHTML
-            let e = tools.escape(i)
-            e = e.replaceAll('&gt','&gt\n')
-            e = e.replaceAll('&lt/','\n&lt/')
-            let d = demo.replace('@escapedInnerHTML', e)
-            d = d.replace('@innerHTML', i)
-            s = s.replace(o, d)
-          })
-          return s
-        },
-      },
-    },
     template: {//where the magic happens
       replace: {
         string: (s)=>{
           try{
             templateroo.tools.find.varNames.user()
             let entire = s
-            console.log("s=",s)
-            s = s.replaceAll('"',"'")
             s = s.replaceAll(/<!--[^]*?-->/g,'')
-            s = templateroo.features.demo.replace.string(s)
             s = templateroo.features.escape.replace.string(s)
             s = templateroo.features.custom.replace.string(s)
             s = templateroo.features.staticVarReplacement.replace.string(s)

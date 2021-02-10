@@ -215,10 +215,6 @@ The `<scrape>` tag allows you to easily gather data using an `XMLHttpRequest` ge
 
     <scrape src="https://coinmarketcap.com/currencies/~var/" query = 'div[class="priceValue___11gHJ"]' refresh = 10></scrape>
 
-## demo
-The demo tag will be used to demonstrate templateroo's capabilities, using a split screen view with one side showing the input and the other showing the rendered html. I may make it a triple view, with the middle shoing the adjusted html. For now, the element is static, but hopefully it will soon be editable and show live updates
-
-
 
 ## template
 All of the features below are referred to as templating features. By default, the entire page will be templated, but if you m=wish to only template a section, edit
@@ -297,10 +293,19 @@ var templateroo = {
   },
 ```
 
-
 ## Planned Additions
 ### **`<elseif>`**,  **`<else>`**:
 planned for use with `<if>` tag
+
+
+# Extended Functionality
+In order to limit the already large size of templateroo.js, future additions of helpful functionality  will be added to extended.js. In order to init templateroo using extended.js, do as follows:
+
+	<script init=false src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
+	<script src = 'https://geargaroo.github.io/templateroo/extended.js'></script>
+
+## demo
+The demo tag will be used to demonstrate templateroo's capabilities, using a split screen view with one side showing the input and the other showing the rendered html. I may make it a triple view, with the middle shoing the adjusted html. For now, the element is static, but hopefully it will soon be editable and show live updates
 
 
 ## Tests and Demos
