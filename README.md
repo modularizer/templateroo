@@ -215,6 +215,9 @@ The `<scrape>` tag allows you to easily gather data using an `XMLHttpRequest` ge
 
     <scrape src="https://coinmarketcap.com/currencies/~var/" query = 'div[class="priceValue___11gHJ"]' refresh = 10></scrape>
 
+## demo
+The demo tag will be used to demonstrate templateroo's capabilities, using a split screen view with one side showing the input and the other showing the rendered html. I may make it a triple view, with the middle shoing the adjusted html. For now, the element is static, but hopefully it will soon be editable and show live updates
+
 
 
 ## template
