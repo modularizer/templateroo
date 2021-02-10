@@ -299,15 +299,8 @@ var templateroo = {
 
 
 ## Planned Additions
-### **`<scrape>`**:
-load and scrape a webpage, update at some specified interval
-
-### **`<demo>`**
-for translating code blocks to-from templating and rendering html
-
 ### **`<elseif>`**,  **`<else>`**:
 planned for use with `<if>` tag
-
 
 
 ## Tests and Demos
