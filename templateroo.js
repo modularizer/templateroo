@@ -65,6 +65,16 @@ var templateroo = {
       },
       proxy: 'https://api.allorigins.win/raw?url=@encodedURL'
     },
+    demo: {
+      tagName: 'demo',
+      innerHTML: `
+      <demo>
+        <div style="display:grid;grid: 100% / auto auto;">
+          <pre style='background-color:#beb2aa;padding:20px;height:100%;margin:0;' contenteditable="true" onkeydown="templateroo.features.demo.onkeydown(event)">@escapedInnerHTML</pre>
+          <div style='background-color:#dbd6c8;padding:20px;height:100%;'>@innerHTML</div>
+        </div>
+      </demo>`
+    },
     template: {
       tagName: 'html'
     },
@@ -499,7 +509,13 @@ var templateroo = {
     },
     unescape: (s)=>{
       let gte = templateroo.genericTools.escape
-      return gte.html(gte.custom(s, false),false)
+      return gte.generic(gte.custom(s, false), {
+      // "&quot;": "'",
+      // "&quot;": '"',
+      "&lt;": "<",
+      "&gt;":  ">",
+      "&nbsp;": ' ',
+      })
     },
     init: ()=>{
       templateroo.genericTools.escape.set(templateroo.settings.staticVarReplacement.varHandle, templateroo.settings.activeVarReplacement.varHandle)
@@ -832,6 +848,7 @@ var templateroo = {
               // console.log("list = ", list, templateroo.genericTools.escape.html(list, false))
               list = JSON.parse(list)
             }
+            console.log({handle, range, list})
             let out = [];
             for (let v of list){
               out.push(inner.replaceAll(handle, v))
@@ -841,7 +858,9 @@ var templateroo = {
             }else{
               r = entire.replace(`>${inner}<`,` done>${out.join("\n")}<`)
             }
+            console.log({out, entire, r})
           }
+
           return [entire, r]
         },
         el: (el)=>templateroo.features._generic.replace.el(el, 'for'),
@@ -1109,13 +1128,65 @@ var templateroo = {
         }
       }
     },
+    demo: {
+      onkeydown: (event)=>{
+        if (event.key == 's' && event.ctrlKey){
+          let demoEl = event.path[2]
+          let el = event.path[0]
+          let i = el.innerHTML
+          i = i.replaceAll('&gt\n', '&gt')
+          i = i.replaceAll('\n&lt/','&lt/')
+          i = i.replaceAll('"',"&quot;")
+          // let t = templateroo.genericTools.re.nested.sortedGroups(i,'"','"')
+          i = templateroo.tools.unescape(i)
+          console.log(i)
+          console.log(templateroo.genericTools.dom.parse.el(i))
+          i = templateroo.features.template.replace.string(i)
+          console.log("i=",i)
+          event.preventDefault()
+        }
+      },
+      replace: {
+        el: (e)=>templateroo.features.demo.replace.elAttrObj(el),
+        elAttrObj: (elAttrObj)=>{
+          /*find the replacement string for a DOM element
+          or elementAttributeObject (made in genericTools.dom.elAttrObj)*/
+          // let entire = elAttrObj.outerHTML.replaceAll('&amp;','&')
+          let entire = elAttrObj.outerHTML
+          let r = templateroo.tools.escape(entire)
+          return [entire, r]
+        },
+        string: (s)=>{
+          /*escape text within escape tags so it
+          is not affected by future operations*/
+          let tools = templateroo.tools
+          let tag = templateroo.settings.demo.tagName
+          let outer = templateroo.tools.find.tag(s, tag,0)
+          // console.log("escape outer=", outer)
+          outer.map(o=>{
+            let i = templateroo.genericTools.dom.parse.el(o).innerHTML.trim()
+            let demo = templateroo.settings.demo.innerHTML
+            let e = tools.escape(i)
+            e = e.replaceAll('&gt','&gt\n')
+            e = e.replaceAll('&lt/','\n&lt/')
+            let d = demo.replace('@escapedInnerHTML', e)
+            d = d.replace('@innerHTML', i)
+            s = s.replace(o, d)
+          })
+          return s
+        },
+      },
+    },
     template: {//where the magic happens
       replace: {
         string: (s)=>{
           try{
             templateroo.tools.find.varNames.user()
             let entire = s
+            console.log("s=",s)
+            s = s.replaceAll('"',"'")
             s = s.replaceAll(/<!--[^]*?-->/g,'')
+            s = templateroo.features.demo.replace.string(s)
             s = templateroo.features.escape.replace.string(s)
             s = templateroo.features.custom.replace.string(s)
             s = templateroo.features.staticVarReplacement.replace.string(s)
@@ -1124,6 +1195,7 @@ var templateroo = {
             let initialReplaceTags = ["for","if","switch"].map(v=>templateroo.settings[v].tagName)
 
             let tagContents= templateroo.tools.find.tagsAttrObjs(s, initialReplaceTags)
+            console.log({tagContents})
             let n = tagContents.length
             for (let i=n-1; i>=0; i--){
               for (let elAttrObj of tagContents[i]){
@@ -1185,6 +1257,12 @@ var templateroo = {
   //aliases for the most important functions
   template: (s)=> templateroo.features.template.replace.string(s),
   templateDoc: ()=> templateroo.features.template.replace.doc(),
+  get: (url, cb=()=>{}, async=true, interval=undefined)=>{
+    let r = templateroo.tools.http._get(url, cb, async)
+    if (interval != undefined){
+      setTimeout(()=>setInterval(()=>templateroo.tools.http._get(url, cb, async),1000*interval),1000*interval)
+    }
+  },
 
   init: ()=>{//initialize the templateroo object
     templateroo.tools.init()
