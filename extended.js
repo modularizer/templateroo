@@ -3,30 +3,59 @@ var extended = {
     demo: {
       tagName: 'demo',
       innerHTML: `
-      <demo>
-        <div style="display:grid;grid: 100% / auto auto;">
-          <pre style='background-color:#beb2aa;padding:20px;height:100%;margin:0;' contenteditable="true" onkeydown="extended.features.demo.onkeydown(event)">@escapedInnerHTML</pre>
-          <div style='background-color:#dbd6c8;padding:20px;height:100%;'>@innerHTML</div>
+        <div style="display:grid;grid: 100% / 33% 33% 33%;">
+          <pre style='background-color:#beb2aa;padding:20px;height:100%;margin:0;overflow:auto;' contenteditable="true" onkeydown="extended.features.demo.onkeydown(event)">@escapedInnerHTML</pre>
+          <pre style='background-color:#dbd6c8;padding:20px;height:100%;margin:0;overflow:auto;'>@adjustedHTML</pre>
+          <div style='background-color:#c4d6e3;padding:20px;height:100%;overflow:auto;'>@innerHTML</div>
         </div>
-      </demo>`
+      `
     },
+  },
+  tools: {
+    format: (s)=>{
+      console.log("s1=",s)
+      let a = s
+      let c = a.match(/<\/[^]*?>/g)
+      a = a.replaceAll(/<\/[^]*?>/g, ')')
+      let o = a.match(/<[^]*?>/g)
+      a = a.replaceAll(/<[^]*?>/g, '(')
+      sample = templateroo.genericTools.re.nested.sortedParenthGroups('a(a(b)c(d(e)f)g)h(i)j(k(l)m)n')
+      groups = templateroo.genericTools.re.nested.sortedParenthGroups(`(${a})`)
+      console.log({o,c,a, groups, sample})
+      s = templateroo.tools.escape(s)
+      s = s.replaceAll('&gt','&gt\n')
+      s = s.replaceAll('&lt/','\n&lt/')
+      return s
+    },
+    unformat: (s)=>{
+
+    }
   },
   features: {
     demo: {
       onkeydown: (event)=>{
+        console.log("this=",this)
+        console.log("event=",event)
         if (event.key == 's' && event.ctrlKey){
           let demoEl = event.path[2]
           let el = event.path[0]
-          let i = el.innerHTML
-          i = i.replaceAll('&gt\n', '&gt')
-          i = i.replaceAll('\n&lt/','&lt/')
-          i = i.replaceAll('"',"&quot;")
-          // let t = templateroo.genericTools.re.nested.sortedGroups(i,'"','"')
-          i = templateroo.tools.unescape(i)
-          console.log(i)
-          console.log(templateroo.genericTools.dom.parse.el(i))
-          i = templateroo.features.template.replace.string(i)
-          console.log("i=",i)
+          let i = el.innerText
+          console.log("i=", i)
+          let a = document.createElement('div')
+          a.innerHTML=i
+          console.log("Ao=", a.outerHTML)
+          // let e = templateroo.genericTools.dom.parse.el(i)
+          // console.log("e=", e)
+          console.log("out=", templateroo.features.template.replace.string(i))
+          //
+          // i = i.replaceAll('&gt\n', '&gt')
+          // i = i.replaceAll('\n&lt/','&lt/')
+          // i = i.replaceAll('"',"&quot;")
+          // i = templateroo.tools.unescape(i)
+          // console.log(i)
+          // console.log(templateroo.genericTools.dom.parse.el(i))
+          // i = templateroo.features.template.replace.string(i)
+          // console.log("i=",i)
           event.preventDefault()
         }
       },
@@ -43,21 +72,24 @@ var extended = {
         string: (s)=>{
           /*escape text within escape tags so it
           is not affected by future operations*/
-          let tools = templateroo.tools
+          let tools = extended.tools
           let tag = extended.settings.demo.tagName
           console.log("s=", s)
           let outer = templateroo.tools.find.tag(s, tag,0)
-          console.log(tag, outer)
+          console.log({tag, outer})
           outer.map(o=>{
             console.log("o=",o)
             let i = templateroo.genericTools.dom.parse.el(o).innerHTML.trim()
             let demo = extended.settings.demo.innerHTML
-            let e = tools.escape(i)
-            e = e.replaceAll('&gt','&gt\n')
-            e = e.replaceAll('&lt/','\n&lt/')
-            let d = demo.replace('@escapedInnerHTML', e)
-            d = d.replace('@innerHTML', i)
-            s = s.replace(o, d)
+            let e = tools.format(i)
+            let d = demo.replaceAll('@escapedInnerHTML', e)
+            d = d.replaceAll('@innerHTML', i)
+            console.log("i=", i)
+            let a = extended.features.template.replace.string(i)
+            console.log("a=",a)
+            a = tools.format(a)
+            d = d.replaceAll('@adjustedHTML', a)
+            s = s.replace(o, `<${tag}>${d}</${tag}>`)
           })
           return s
         },

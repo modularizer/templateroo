@@ -307,6 +307,7 @@ var templateroo = {
             i++;
             o = f(s,i);
           }
+
           let c = r.map(v=>v.join(""))
           let out = r.map(v=>[])
           for (let i=0; i<r.length;i++){
@@ -335,7 +336,7 @@ var templateroo = {
       attrObj: (el)=>{
         /*get attributes, innerHTML, tagName, and outerHTML of a DOM  element*/
         let attr = el.attributes
-        let a = {innerHTML: el.innerHTML, outerHTML: el.outerHTML, tagName: el.tagName}
+        let a = {innerHTML: el.innerHTML, outerHTML: el.outerHTML, outerText: el.outerText, tagName: el.tagName}
         if (attr){
           for (let i=0; i<attr.length; i++){
             a[attr[i].name] = attr[i].value
@@ -836,6 +837,7 @@ var templateroo = {
             }
             if (typeof list === 'string' || list instanceof String){
               // console.log("list = ", list, templateroo.genericTools.escape.html(list, false))
+              list = list.replaceAll("'",'"')
               list = JSON.parse(list)
             }
             console.log({handle, range, list})
@@ -850,6 +852,7 @@ var templateroo = {
             }
             console.log({out, entire, r})
           }
+          console.log("entire=",entire)
 
           return [entire, r]
         },
