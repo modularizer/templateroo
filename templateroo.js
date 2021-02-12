@@ -277,8 +277,10 @@ var templateroo = {
         _unconvert: (s, o, c)=>{
           /*reverse conversion done by _convert*/
           let gtre = templateroo.genericTools.re
-          s = s.replaceAll('(',o)
-          s = s.replaceAll(')',c)
+          s = s.replace('(',o)
+          s = s.replace(')',c)
+          // s = s.replaceAll('(',o)
+          // s = s.replaceAll(')',c)
           s = gtre.replaceObj(s, {'&#40': '(','&#41':')'})
           return s
         },
@@ -322,7 +324,20 @@ var templateroo = {
           let temp = templateroo.genericTools.re.nested
           let o; let c;
           [s, o, c] = temp._convert(s, open, close)
-          return temp.sortedParenthGroups(s).map(v=>v.map((v,i)=>temp._unconvert(v, o[i], c[i])))
+          let a = [];
+          let groups = temp.sortedParenthGroups(s)
+          console.log({open, close, s, o, c, groups})
+          let n = groups.length
+          for (let i=0; i<n; i++){
+            a.push([])
+            for(let [j, v] of Object.entries(groups[i])){
+              for (let k=i; k<n;k++){
+                v = temp._unconvert(v, o[k], c[k])
+              }
+              a[i].push(v)
+            }
+          }
+          return a
         },
       },
     },
@@ -453,7 +468,7 @@ var templateroo = {
       tag: (s, tag, level=undefined)=>{
         /*find groups of a single tag
         level 0 finds outermost, -1 finds innermost*/
-        return templateroo.tools.find._tag(s, `<${tag}[^]*?>`,`<\\/${tag}>`, level)
+        return templateroo.tools.find._tag(s, `<${tag}`,`<\\/${tag}>`, level)
       },
       tags: (s, tags, level=undefined)=>{
         /*find one or all levels of the tag groups in a string*/
@@ -466,7 +481,9 @@ var templateroo = {
       },
       tagsAttrObjs: (s, tags, level=undefined)=>{
         /*get attribute Objects for each of the specified level tags in a string*/
+        // console.log("s=",s)
         let elStrings= templateroo.tools.find.tags(s, tags, level)
+        // console.log("elStrings", elStrings)
         if (level == undefined){
           return elStrings.map(o=>o.map(v=>templateroo.genericTools.dom.elAttrObj(v)))
         }else{
@@ -584,7 +601,7 @@ var templateroo = {
               s = el.outerHTML
             }
           }
-          console.log("re=", re, new RegExp(re,'g'))
+          // console.log("re=", re, new RegExp(re,'g'))
           if (re){
             try{
               s = s.match(new RegExp(re,'g'))
@@ -848,11 +865,11 @@ var templateroo = {
             if (elAttrObj.initialHTML){
               r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
             }else{
-              r = entire.replace(`>${inner}<`,` done>${out.join("\n")}<`)
+              r = entire.replace(`>${inner}<`,` done="true">${out.join("\n")}<`)
             }
             console.log({out, entire, r})
           }
-          console.log("entire=",entire)
+          // console.log("entire=",entire)
 
           return [entire, r]
         },
@@ -874,7 +891,7 @@ var templateroo = {
           if (!elAttrObj.done){
             r = r.replaceAll(inner, ["",inner][1*(c=="true")])
             if (!elAttrObj.initialhtml){
-              r = r.replace('>', ' done>')
+              r = r.replace('>', ' done="true">')
             }
           }
           return [entire, r]
@@ -908,7 +925,7 @@ var templateroo = {
             }
             r = r.replace(inner, v)
             if (!elAttrObj.initialhtml){
-              r = r.replace('>', ' done>')
+              r = r.replace('>', ' done="true">')
             }
           }
           return [entire, r]
@@ -994,7 +1011,7 @@ var templateroo = {
               let group = groups[i]
               group.map(o=>{
                 let [e,r] = f(o)
-                // console.log({e,r,s})
+                console.log({e,r,s})
                 s = s.replaceAll(e,r)
                 // console.log(s)
               })
@@ -1061,6 +1078,7 @@ var templateroo = {
         el.setAttribute('rel','icon')
         el.setAttribute('type', "image/svg+xml")
         el.setAttribute('href', `data:image/svg+xml,${encoded}`)
+        console.log("fav=", el)
         return el
       },
       makeEl : ()=>{
@@ -1070,11 +1088,39 @@ var templateroo = {
         if (els){
           let favEl = els[0]
           if (favEl){
-            let url = favEl.attributes.src.value
-            let elString;
-            templateroo.tools.http.get(url, (svgInnerHTML)=>{
-              el = templateroo.features.faviconsvg.make(svgInnerHTML)
-            }, false)
+            if (favEl.attributes.src){
+              let url = favEl.attributes.src.value
+              let elString;
+              templateroo.tools.http.get(url, (svgInnerHTML)=>{
+                el = templateroo.features.faviconsvg.make(svgInnerHTML)
+              }, false)
+            }else{
+              let attrObj = templateroo.genericTools.dom.attrObj(favEl)
+              console.log("attrObj=", attrObj)
+              let c = 'red'
+              let d = false
+              let ih = ''
+              if (attrObj.color){
+                c = attrObj.color
+              }
+              if (attrObj.innerHTML){
+                ih = attrObj.innerHTML
+              }else{
+                d= true
+                ih = `<circle cx="7" cy="7" r="7" style="fill:${c};"/>`
+                if (attrObj.text){
+                  ih = `<text x="0" y="14" style="fill:${c};">${attrObj.text}</text>`
+                }
+              }
+
+              if (attrObj.default || d){
+                ih = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'>${ih}</svg>`
+              }
+
+              console.log("favEl inner = ", ih)
+              el = templateroo.features.faviconsvg.make(ih)
+            }
+
           }
         }
         return el
@@ -1091,9 +1137,9 @@ var templateroo = {
       },
       replace: {
         el: (el)=>{
-          console.log(el)
+          // console.log(el)
           let elAttrObj = templateroo.genericTools.dom.attrObj(el)
-          console.log(elAttrObj)
+          // console.log(elAttrObj)
           let src = elAttrObj[templateroo.settings.scrape.attrNames.src]
           let query = elAttrObj[templateroo.settings.scrape.attrNames.query]
           let refresh = elAttrObj[templateroo.settings.scrape.attrNames.refresh]
@@ -1132,14 +1178,16 @@ var templateroo = {
             s = templateroo.features.custom.replace.string(s)
             s = templateroo.features.staticVarReplacement.replace.string(s)
             s = templateroo.features.activeVarReplacement.replace.string(s)
-
+            // console.log("s=",s)
             let initialReplaceTags = ["for","if","switch"].map(v=>templateroo.settings[v].tagName)
-
+            // console.log("s=",s)
             let tagContents= templateroo.tools.find.tagsAttrObjs(s, initialReplaceTags)
             console.log({tagContents})
+            // console.log("s=",s)
             let n = tagContents.length
             for (let i=n-1; i>=0; i--){
               for (let elAttrObj of tagContents[i]){
+                // console.log("elAttrObj=", elAttrObj)
                 let t = elAttrObj.tagName.toLowerCase()
                 if (initialReplaceTags.includes(t)){
                   let f = templateroo.features[t].replace.string
@@ -1186,6 +1234,10 @@ var templateroo = {
             let group = groups[i]
             group.map(o=>{
               let [e,r] = f(o)
+              if (!s.includes(e)){
+                console.warn("s=",s)
+                console.warn("e=",e)
+              }
               s = s.replaceAll(e,r)
             })
           }
