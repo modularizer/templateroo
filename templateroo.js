@@ -268,20 +268,45 @@ var templateroo = {
           s = gtre.replaceObj(s, gtre.nested._conversion)
           let o = s.match(new RegExp(open,'g'))
           let c = s.match(new RegExp(close,'g'))
-          s = gtre.replaceObj(s, {
-            [open]: '(',
-            [close]: ')'
-          })
+          if (o){
+            for (let [i, v] of Object.entries(o)){
+              s = s.replace(v, `(${i}_`)
+            }
+          }
+          if (c){
+            for (let [i, v] of Object.entries(c)){
+              s = s.replace(v, `_${i})`)
+            }
+          }
+
+          // s = gtre.replaceObj(s, {
+          //   [open]: '(',
+          //   [close]: ')'
+          // })
           return [s, o, c]
         },
         _unconvert: (s, o, c)=>{
           /*reverse conversion done by _convert*/
           let gtre = templateroo.genericTools.re
-          s = s.replace('(',o)
-          s = s.replace(')',c)
-          // s = s.replaceAll('(',o)
-          // s = s.replaceAll(')',c)
+          // console.log("s=",s)
+          let ca = s.match(/_[0-9]*\)/g)
+          let oa = s.match(/\([0-9]*_/g)
+          // console.log({oa,ca,s})
+          for (let v of Object.entries(ca)){
+            try{
+              let i = 1*[...v[1].matchAll(/_([0-9]*)\)/g)][0].pop()
+              s = s.replaceAll(v[1],c[i])
+            }catch{}
+          }
+          for (let v of Object.entries(oa)){
+            try{
+              let i = 1*[...v[1].matchAll(/\(([0-9]*)_/g)][0].pop()
+              s = s.replaceAll(v[1],o[i])
+            }catch{}
+          }
+          // console.log({s})
           s = gtre.replaceObj(s, {'&#40': '(','&#41':')'})
+
           return s
         },
         parenthGroup: (s, n=1)=>{
@@ -290,6 +315,16 @@ var templateroo = {
           let res = "\\([^\\)\\(]*?".repeat(n)+ "[^\\)\\(]*?\\)".repeat(n)
           let re = new RegExp(res,'g')
           return s.match(re)
+        },
+        innerParenthGroup: (s)=>{
+          /*find the deepest match sets of () if n=1,
+          if n=2, finds the second deepest sets (()), etc.*/
+          // console.log("s=", s)
+          let res = "\\([^\\)\\(]*?\\)"
+          let re = new RegExp(res,'g')
+          let m = s.match(re)
+          console.log("inner=", m)
+          return m
         },
         singleGroup: (s, open, close, n=1)=>{
           /*find the deepest match sets of open-close if n=1,
@@ -312,6 +347,7 @@ var templateroo = {
 
           let c = r.map(v=>v.join(""))
           let out = r.map(v=>[])
+          // console.log({r})
           for (let i=0; i<r.length;i++){
             for (let j=0;j<r[i].length;j++){
               out[c.indexOf(c.filter(v=>v.includes(r[i][j])).pop())-i].push(r[i][j])
@@ -324,20 +360,24 @@ var templateroo = {
           let temp = templateroo.genericTools.re.nested
           let o; let c;
           [s, o, c] = temp._convert(s, open, close)
-          let a = [];
           let groups = temp.sortedParenthGroups(s)
           console.log({open, close, s, o, c, groups})
-          let n = groups.length
-          for (let i=0; i<n; i++){
-            a.push([])
-            for(let [j, v] of Object.entries(groups[i])){
-              for (let k=i; k<n;k++){
-                v = temp._unconvert(v, o[k], c[k])
-              }
-              a[i].push(v)
-            }
-          }
+          let a = groups.map(v=>v.map(v2=>temp._unconvert(v2, o, c)))
+          console.log("a=", a)
+
           return a
+          // let a = [];
+          // let n = groups.length
+          // for (let i=0; i<n; i++){
+          //   a.push([])
+          //   for(let [j, v] of Object.entries(groups[i])){
+          //     for (let k=i; k<n;k++){
+          //       v = temp._unconvert(v, o[k], c[k])
+          //     }
+          //     a[i].push(v)
+          //   }
+          // }
+          // return a
         },
       },
     },
@@ -475,8 +515,9 @@ var templateroo = {
         if (tags.length == 1){
           return templateroo.tools.find.tag(s, tags[0], level)
         }
-        let openTag = `<((${tags.join(")|(")}))[^]*?>`
-        let closeTag = `<\\/((${tags.join(")|(")}))>`
+        let openTag = `<(${tags.join("|")})`
+        let closeTag = `<\\/(${tags.join("|")})>`
+        console.log({openTag, closeTag})
         return templateroo.tools.find._tag(s, openTag, closeTag, level)
       },
       tagsAttrObjs: (s, tags, level=undefined)=>{
@@ -492,6 +533,15 @@ var templateroo = {
       },
       deepestAttrObjs: (s, tags)=>templateroo.tools.find.tagsAttrObjs(s,tags,-1),
       shallowestAttrObjs: (s, tags)=>templateroo.tools.find.tagsAttrObjs(s,tags,0),
+      outsideIn: (s, tags, func, doneClass)=>{
+        let outers = templateroo.tools.find.tagsAttrObjs(s,tags,0)
+        for (let outer of outers){
+          let o = func(outer)
+          let outEl = templateroo.genericTools.dom.parse.el(o)
+          outEl.classList.add(doneClass)
+
+        }
+      }
     },
     filterVarNames: (varNameS)=>{
       /*filter an array and return only names of actual variables
@@ -784,6 +834,9 @@ var templateroo = {
         return s
       },
     },
+    scopedVarReplacement: {
+
+    },
     escape: {//escape text so it is displayed as written
       replace: {
         el: (e)=>templateroo.features.escape.replace.elAttrObj(el),
@@ -834,43 +887,45 @@ var templateroo = {
           let inner = elAttrObj.innerHTML
           let entire = elAttrObj.outerHTML.replaceAll('&amp;','&')
           let r = entire
-          if (!elAttrObj.done){
-            // console.log("range = ", range, templateroo.genericTools.escape.html(range, false))
-            if (range){
-              let i0;
-              let i1;
-              let step;
-              if (!isNaN(range)){
-                i1 = 1*range;
-              }else if(Array.isArray(JSON.parse(range))){
-                [i0, i1, step] = range
-              }
-              i0 |= 0
-              if (i1==undefined){i1=1}
-              if (step==undefined){step=1}
-              for (let i= i0; i< i1; i+= step){
-                list.push(i)
-              }
-            }
-            if (typeof list === 'string' || list instanceof String){
-              // console.log("list = ", list, templateroo.genericTools.escape.html(list, false))
-              list = list.replaceAll("'",'"')
-              list = JSON.parse(list)
-            }
-            console.log({handle, range, list})
-            let out = [];
-            for (let v of list){
-              out.push(inner.replaceAll(handle, v))
-            }
-            if (elAttrObj.initialHTML){
-              r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
-            }else{
-              r = entire.replace(`>${inner}<`,` done="true">${out.join("\n")}<`)
-            }
-            console.log({out, entire, r})
-          }
-          // console.log("entire=",entire)
 
+          // console.log("range = ", range, templateroo.genericTools.escape.html(range, false))
+          if (range){
+            let i0;
+            let i1;
+            let step;
+            if (!isNaN(range)){
+              i1 = 1*range;
+            }else if(Array.isArray(JSON.parse(range))){
+              [i0, i1, step] = range
+            }
+            i0 |= 0
+            if (i1==undefined){i1=1}
+            if (step==undefined){step=1}
+            for (let i= i0; i< i1; i+= step){
+              list.push(i)
+            }
+          }
+          if (typeof list === 'string' || list instanceof String){
+            // console.log("list = ", list, templateroo.genericTools.escape.html(list, false))
+            list = list.replaceAll("'",'"')
+            list = JSON.parse(list)
+          }
+          // console.log({handle, range, list})
+          let out = [];
+          for (let v of list){
+            out.push(inner.replaceAll(handle, v))
+          }
+          if (elAttrObj.initialHTML){
+            r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
+          }else{
+            r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
+          }
+          // console.log({out, entire, r})
+
+          // console.log("entire=",entire)
+          let t = templateroo.settings.for.tagName
+          r = r.replace('<'+ t, '<done'+ t)
+          r = r.replace('</'+ t, '</done'+ t)
           return [entire, r]
         },
         el: (el)=>templateroo.features._generic.replace.el(el, 'for'),
@@ -880,20 +935,23 @@ var templateroo = {
     if: {//if statement tools
       replace: {
         elAttrObj: (elAttrObj)=>{
+          console.log(elAttrObj)
           let con = templateroo.settings.if.attrNames.condition
           let c = 'true'
           if (elAttrObj[con]){
             c = elAttrObj[con]
           }
+          console.log("c=", c)
           let inner = elAttrObj.innerHTML
           let entire = elAttrObj.outerHTML.replaceAll('&amp;','')
           let r = entire
-          if (!elAttrObj.done){
-            r = r.replaceAll(inner, ["",inner][1*(c=="true")])
-            if (!elAttrObj.initialhtml){
-              r = r.replace('>', ' done="true">')
-            }
+          r = r.replaceAll(inner, ["",inner][1*(c=="true")])
+          if (!elAttrObj.initialhtml){
+            r = r.replace('>', '>')
           }
+          let t = templateroo.settings.if.tagName
+          r = r.replace('<'+ t, '<done'+ t)
+          r = r.replace('</'+ t, '</done'+ t)
           return [entire, r]
         },
         el: (el)=>templateroo.features._generic.replace.el(el, 'if'),
@@ -912,22 +970,24 @@ var templateroo = {
           let inner = elAttrObj.innerHTML
           let entire = elAttrObj.outerHTML
           let r = entire
-          if (!elAttrObj.done){
-            let res = `<${ct}[^]*?val\\s*=["\\s[&quot]]*([^]+?)["\\s[&quot]]*?>[^]+?<\\/${ct}>`
-            let re = new RegExp(res, 'g')
-            let res2 = `<${ct}[^]*?>([^]+?)<\\/${ct}>`
-            let re2 = new RegExp(res2, 'g')
-            let cases = templateroo.genericTools.re.match(entire, re)
-            let vals = templateroo.genericTools.re.match(entire, re2)
-            if (cases.includes(c)){
-              let i = cases.indexOf(c);
-              v = vals[i]
-            }
-            r = r.replace(inner, v)
-            if (!elAttrObj.initialhtml){
-              r = r.replace('>', ' done="true">')
-            }
+          let res = `<${ct}[^]*?val\\s*=["\\s[&quot]]*([^]+?)["\\s[&quot]]*?>[^]+?<\\/${ct}>`
+          let re = new RegExp(res, 'g')
+          let res2 = `<${ct}[^]*?>([^]+?)<\\/${ct}>`
+          let re2 = new RegExp(res2, 'g')
+          let cases = templateroo.genericTools.re.match(entire, re)
+          let vals = templateroo.genericTools.re.match(entire, re2)
+          if (cases.includes(c)){
+            let i = cases.indexOf(c);
+            v = vals[i]
           }
+          r = r.replace(inner, v)
+          if (!elAttrObj.initialhtml){
+            r = r.replace('>', '>')
+          }
+
+          let t = templateroo.settings.switch.tagName
+          r = r.replace('<'+ t, '<done'+ t)
+          r = r.replace('</'+ t, '</done'+ t)
           return [entire, r]
         },
         el: (el)=>templateroo.features._generic.replace.el(el, 'switch'),
@@ -1004,17 +1064,19 @@ var templateroo = {
             let tools = templateroo.tools
             let tags = Object.keys(templateroo.state.custom)
             // console.log("tags=", tags)
-            let groups= templateroo.tools.find.tagsAttrObjs(s, tags)
-            // console.log("groups=", groups)
-            let f = templateroo.features.custom.customTags.replace.elAttrObj
-            for (let i=groups.length-1; i>=0;i--){
-              let group = groups[i]
-              group.map(o=>{
-                let [e,r] = f(o)
-                console.log({e,r,s})
-                s = s.replaceAll(e,r)
-                // console.log(s)
-              })
+            if (tags.length>0){
+              let groups= templateroo.tools.find.tagsAttrObjs(s, tags)
+              // console.log("groups=", groups)
+              let f = templateroo.features.custom.customTags.replace.elAttrObj
+              for (let i=groups.length-1; i>=0;i--){
+                let group = groups[i]
+                group.map(o=>{
+                  let [e,r] = f(o)
+                  console.log({e,r,s})
+                  s = s.replaceAll(e,r)
+                  // console.log(s)
+                })
+              }
             }
             return s
           },
@@ -1173,14 +1235,25 @@ var templateroo = {
           try{
             templateroo.tools.find.varNames.user()
             let entire = s
+
+            //remove comments
             s = s.replaceAll(/<!--[^]*?-->/g,'')
+
+            //escape
             s = templateroo.features.escape.replace.string(s)
+
+            //set custom tags
             s = templateroo.features.custom.replace.string(s)
+
+            //replace static variables
             s = templateroo.features.staticVarReplacement.replace.string(s)
+
+            //replace active variables and add callbacks
             s = templateroo.features.activeVarReplacement.replace.string(s)
-            // console.log("s=",s)
+
             let initialReplaceTags = ["for","if","switch"].map(v=>templateroo.settings[v].tagName)
             // console.log("s=",s)
+            console.log("initialReplaceTags=", initialReplaceTags)
             let tagContents= templateroo.tools.find.tagsAttrObjs(s, initialReplaceTags)
             console.log({tagContents})
             // console.log("s=",s)
@@ -1234,10 +1307,11 @@ var templateroo = {
             let group = groups[i]
             group.map(o=>{
               let [e,r] = f(o)
-              if (!s.includes(e)){
-                console.warn("s=",s)
-                console.warn("e=",e)
-              }
+              // if (!s.includes(e)){
+              //   console.warn("s=",s)
+              //   console.warn("e=",e)
+              //   console.warn("r=",r)
+              // }
               s = s.replaceAll(e,r)
             })
           }
