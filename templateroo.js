@@ -1472,9 +1472,10 @@ var templateroo = {
         doc: ()=>{
           /*templates the entire document*/
           if (templateroo.state.initialhtml == ''){
-            for (let c of Object.values(templateroo.coolTags)){
+            for (let v of Object.values(templateroo.coolTags)){
+              v.set()
               let el = document.createElement('div')
-              el.innerHTML = c
+              el.innerHTML = v.html
               document.body.append(el)
             }
             templateroo.state.initialhtml = document.documentElement.outerHTML
@@ -1531,82 +1532,84 @@ var templateroo = {
 
 
   coolTags: {
-    tooltip: `
-      <custom
-        tag=tooltip
-        tt_attrname=tooltip
-        tt_trigger=mousemove
-        tt_textcolor=#000
-        tt_fontsize=12pt
-        tt_backgroundcolor=#c8c8c8
-        >
-        <script>
-          tooltip = {
-            display:'none',
-            top: 100,
-            left: 100,
-            text: 'tooltip',
-            show: (s, top, left)=>{
-              tooltip.top = top
-              tooltip.left = left
-              tooltip.text = s
-              tooltip.display = 'block'
-            },
-            hide: ()=>{
-              tooltip.top = 0
-              tooltip.left = 0
-              tooltip.display = 'none'
-              tooltip.text = ''
-            }
+    tooltip: {
+      set: ()=>{
+        window.tooltip = {
+          display:'none',
+          top: 100,
+          left: 100,
+          text: 'tooltip',
+          show: (s, top, left)=>{
+            tooltip.top = top
+            tooltip.left = left
+            tooltip.text = s
+            tooltip.display = 'block'
+          },
+          hide: ()=>{
+            tooltip.top = 0
+            tooltip.left = 0
+            tooltip.display = 'none'
+            tooltip.text = ''
           }
-        </script>
-        <script post>
-          window.addEventListener("~tt_trigger",function(event){
-            p = event.path
-            i=0;
-            found=false;
-            if (p.length>4){
-              while(!found && i<(p.length-4)){
-                if (p[i].hasAttribute){
-                  if (p[i].hasAttribute('~tt_attrname')){
-                    found = p[i]
+        }
+      },
+      html:`
+        <custom
+          tag=tooltip
+          tt_attrname=tooltip
+          tt_trigger=mousemove
+          tt_textcolor=#000
+          tt_fontsize=12pt
+          tt_backgroundcolor=#c8c8c8
+          >
+          <script post>
+            window.addEventListener("~tt_trigger",function(event){
+              p = event.path
+              i=0;
+              found=false;
+              if (p.length>4){
+                while(!found && i<(p.length-4)){
+                  if (p[i].hasAttribute){
+                    if (p[i].hasAttribute('~tt_attrname')){
+                      found = p[i]
+                    }
                   }
+                  i++;
                 }
-                i++;
               }
-            }
 
-            if (found){
-              let bb = found.getBoundingClientRect()
-              tooltip.show(found.getAttribute('~tt_attrname'), bb.bottom, bb.right)
-            }else{
-              tooltip.hide()
-            }
-          })
-        </script>
-        <div style="position: relative; width: 0; height: 0">
-          <div
-            style="
-              top:@tooltip.top;
-              left:@tooltip.left;
-              position:absolute;
-              z-index:100;
-              font-size: ~tt_fontsize;
-              color: ~tt_textcolor;
-              background-color:~tt_backgroundcolor;
-              margin: -10px;
-              padding: 10px;
-              width: 30vw;
-              height: auto;
-              word-break:break-all;
-              display: @tooltip.display;
-              border-radius: 5px;
-              ">
-            @tooltip.text
+              if (found){
+                let bb = found.getBoundingClientRect()
+                tooltip.show(found.getAttribute('~tt_attrname'), bb.bottom, bb.right)
+              }else{
+                tooltip.hide()
+              }
+            })
+          </script>
+          <div style="position: relative; width: 0; height: 0">
+            <div
+              style="
+                top:@tooltip.top;
+                left:@tooltip.left;
+                position:absolute;
+                z-index:100;
+                font-size: ~tt_fontsize;
+                color: ~tt_textcolor;
+                background-color:~tt_backgroundcolor;
+                margin: -10px;
+                padding: 10px;
+                width: 30vw;
+                height: auto;
+                word-break:break-all;
+                display: @tooltip.display;
+                border-radius: 5px;
+                ">
+              @tooltip.text
+            </div>
           </div>
-        </div>
-      </custom>
-      `
+        </custom>
+        `
+    }
   },
 
   init: ()=>{//initialize the templateroo object
