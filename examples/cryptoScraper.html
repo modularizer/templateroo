@@ -1,22 +1,62 @@
 <!doctype html>
   <html>
     <head>
-      <title>templateroo</title>
+      <title>Crypto</title>
       <script src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
       <faviconsvg src ='https://geargaroo.github.io/templateroo/mySVGFavicon.svg'></faviconsvg>
     </head>
 
     <body>
       <script>
-        coins = ["bitcoin", "ethereum","litecoin","tezos","algorand","dogecoin"]
+      refreshInterval = 5
+      coins = ["bitcoin", "ethereum","litecoin","tezos","algorand","dogecoin"]
+      prices = {}
+      for (let coin of coins){prices[coin]=0}
       </script>
-      <custom tag="coin" var="~coinName">
-        <b>~var = </b>
-        <scrape src="https://coinmarketcap.com/currencies/~var/" query = 'div[class="priceValue___11gHJ"]' refresh = 10></scrape>
-        <br>
+
+      <script>
+        tooltip = {
+          display:'none',
+          top: 100,
+          left: 100,
+          text: 'tooltip',
+          show: (s, top, left)=>{
+            tooltip.top = top
+            tooltip.left = left
+            tooltip.text = s
+            tooltip.display = 'block'
+          },
+          hide: ()=>{
+            tooltip.top = 0
+            tooltip.left = 0
+            tooltip.display = 'none'
+            tooltip.text = ''
+          }
+        }
+      </script>
+      <tooltip></tooltip>
+
+
+      <custom
+        tag="coin"
+        coinName="~coinName"
+        tooltip= "scraping ~coinName price from https://coinmarketcap.com/currencies/~coinName/ every ~refreshInterval seconds"
+        style="cursor:default;"
+        >
+          <b style='font-size:30px;'>~coinName = </b>
+          <scrape
+            src="https://coinmarketcap.com/currencies/~coinName/"
+            query = 'div[class="priceValue___11gHJ"]'
+            innerText
+            refresh=~refreshInterval
+            var="prices.~coinName"
+            style='font-size:30px;'
+            onclick= console.log
+            ></scrape>
+          <br>
       </custom>
 
-      <for var=coinName list=@coins>
+      <for var=coinName list=~coins>
         <coin/>
       </for>
     </body>
