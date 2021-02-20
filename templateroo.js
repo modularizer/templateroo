@@ -92,7 +92,7 @@ var templateroo = {
         if (a){
           try{
             a = a[0].pop()
-            s = s.replace(a, `${a} initialHTML="${n}"`)
+            s = s.replace(a, `${a} initialhtml="${n}"`)
           }catch{}
         }
         templateroo.state.initial.els.push(s)
@@ -993,7 +993,7 @@ var templateroo = {
           for (let v of list){
             out.push(inner.replaceAll(handle, v))
           }
-          if (elAttrObj.initialHTML){
+          if (elAttrObj.initialhtml){
             r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
           }else{
             r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
@@ -1104,9 +1104,9 @@ var templateroo = {
           for (let c of classes){
             el.classList.add(c)
           }
-          if (!el.initialHTML){
+          if (!el.initialhtml){
             let ind = templateroo.state.initial.add(entire)
-            el.setAttribute('initialHTML',ind)
+            el.setAttribute('initialhtml',ind)
           }
 
           let i = templateroo.features.activeVarReplacement.unlabel(ot)
