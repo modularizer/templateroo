@@ -37,7 +37,11 @@ var templateroo = {
       }
     },
     eval: {
-      tagName: 'eval'
+      tagName: 'eval',
+      barebones: {
+        open: '${',
+        close: '}',
+      }
     },
     escape: {
       tagName: 'esc',
@@ -198,7 +202,8 @@ var templateroo = {
             delete varObj[varName]
           }
           let name = prefix + varName
-          // console.log(`adding callback functions to variable "${name}"`)
+          console.log(`adding callback functions to variable "${name}"`)
+          console.log({varName, val})
           let o = Object.defineProperty(varObj, varName,{
             set: (v)=>{
               // console.log("setting ", name)
@@ -208,7 +213,8 @@ var templateroo = {
               if (v instanceof Object){
                 let pre = prefix + varName + '.'
                 for (let k of Object.keys(v)){
-                  let ao= templateroo.genericTools.vars.addCbs.var(k, varObj[varName], changeCb, setCb, getCb, pre, true)
+                  let v2 = Object.assign({}, varObj[varName])
+                  let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
                 }
               }
               if (v != o){
@@ -224,12 +230,12 @@ var templateroo = {
             },
           })
           varObj[varName]= val
-          if (val instanceof Object){
-            let pre = prefix + varName + '.'
-            for (let k of Object.keys(val)){
-              let ao= templateroo.genericTools.vars.addCbs.var(k, varObj[varName], changeCb, setCb, getCb, pre, true)
-            }
-          }
+          // if (val instanceof Object){
+          //   let pre = prefix + varName + '.'
+          //   for (let k of Object.keys(val)){
+          //     let ao= templateroo.genericTools.vars.addCbs.var(k, varObj[varName], changeCb, setCb, getCb, pre, true)
+          //   }
+          // }
           return varObj[varName]
         },
         vars: (varNames, varObj, changeCb=(vn,v)=>{}, setCb=(vn,v)=>{}, getCb=(vn,v)=>{})=>{
@@ -783,7 +789,7 @@ var templateroo = {
 
             //find all active variables in element
             let varNames = templateroo.tools.find.varNames.active(entire)
-            console.log({entire, varNames})
+            // console.log({entire, varNames})
 
             //update class to include active variables
             let classPresent=false
@@ -820,6 +826,7 @@ var templateroo = {
           else{
             r = ''
           }
+          // console.log({entire, r})
           return [entire, r]
         },
         string: (s, elAttrObj= undefined)=>{
@@ -830,8 +837,15 @@ var templateroo = {
               s = templateroo.features.activeVarReplacement.replace.string(s, v)
             })
           }else{
+            // console.log({elAttrObj})
             let [entire, r] = templateroo.features.activeVarReplacement.replace.elAttrObj(elAttrObj)
+            if (!s.includes(entire)){
+              console.log("s includes entire", s.includes(entire), s==entire)
+              console.log(s)
+              console.log(entire)
+            }
             s = s.replaceAll(entire, r)
+
           }
           return s
         },
@@ -885,7 +899,7 @@ var templateroo = {
         console.log("updating ", el)
         let entire = el.outerHTML
         let elAttrObj = templateroo.genericTools.dom.elAttrObj(entire)
-        console.log(elAttrObj.initialhtml)
+        // console.log(elAttrObj.initialhtml)
         if (elAttrObj.initialhtml){
           let ih = elAttrObj.initialhtml
           let s = templateroo.state.initial.get(ih)
@@ -950,8 +964,9 @@ var templateroo = {
           let v = templateroo.settings.for.attrNames.handle
           let rt = templateroo.settings.for.attrNames.range
           let a = templateroo.settings.for.attrNames.array
+          let varHandle = '~'
 
-          let handle = '~_'
+          let handle = `${varHandle}_`
           if (elAttrObj[v]){
             handle = elAttrObj[v]
           }
@@ -991,7 +1006,25 @@ var templateroo = {
           }
           let out = [];
           for (let v of list){
-            out.push(inner.replaceAll(handle, v))
+            let temp = inner
+            console.log("v=",v)
+            if (v instanceof Object || v instanceof Array){
+              console.log('here')
+              temp = temp.replaceAll(varHandle + handle, varHandle + 'this')
+              let f = templateroo.tools.find.varNames._potential
+              let vars = f(temp, `${varHandle}x`)
+              vars.map(v2=>{
+                try{
+                  let res = Function(`'use strict'; return (${v2})`).bind(v)()
+                  temp = temp.replace(varHandle + v2, res)
+                }catch{}
+              })
+            }else{
+              console.log("temp=", temp, varHandle + handle, v)
+              temp = temp.replace(varHandle + handle, v)
+              console.log("temp=", temp)
+            }
+            out.push(temp)
           }
           if (elAttrObj.initialhtml){
             r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
@@ -1051,9 +1084,9 @@ var templateroo = {
           let vals = templateroo.genericTools.re.match(entire, re2)
           if (cases.includes(c)){
             let i = cases.indexOf(c);
-            v = vals[i]
+            let v = vals[i]
+            r = r.replace(inner, v)
           }
-          r = r.replace(inner, v)
           if (!elAttrObj.initialhtml){
             r = r.replace('>', '>')
           }
@@ -1073,7 +1106,7 @@ var templateroo = {
         elAttrObj: (elAttrObj)=>{
           // let entire = elAttrObj.outerHTML.replaceAll('&amp;','')
           let entire = elAttrObj.outerHTML
-          console.log("eval entire = ", entire)
+          // console.log("eval entire = ", entire)
           let el = templateroo.genericTools.dom.parse.el(entire)
           let ot = elAttrObj.outerText
 
@@ -1090,14 +1123,14 @@ var templateroo = {
 
           let varNames = templateroo.tools.find.varNames.active(ot)//find sorted variable names
           let m = templateroo.settings.activeVarReplacement.varHandle
-          console.log({varNames,ot})
+          // console.log({varNames,ot})
           let gt = templateroo.genericTools
           let f = gt.vars.get.valString//function to find value
           let vo = templateroo.settings.varObj
           varNames.map(vn=>{
             let rep = [m.replace('x',vn), gt.escape.html(f(vn,vo),false).replaceAll("'",'"')]
             ot = ot.replaceAll(rep[0], rep[1])
-            console.log(rep)
+            // console.log(rep)
             classes.push('.'+ vn)
           })
 
@@ -1126,16 +1159,41 @@ var templateroo = {
         },
         string: (s)=>{
           /*eval text within eval tags*/
+          let settings = templateroo.settings.eval
+          let bbOpen = settings.barebones.open
+          let bbClose = settings.barebones.close
           let tools = templateroo.tools
-          let tag = templateroo.settings.eval.tagName
-          let elAttrObjs = templateroo.tools.find.shallowestAttrObjs(s,[tag])
+          let tag = settings.tagName
+
+          s = s.replaceAll(bbOpen, `<${tag}>`).replaceAll(bbClose,`</${tag}>`)
+
+          let elAttrObjs = tools.find.shallowestAttrObjs(s,[tag])
           elAttrObjs.map(o=>{
             let [e,r] = templateroo.features.eval.replace.elAttrObj(o)
             // console.log({s,e,r,o})
             s = s.replace(e,r)
           })
           return s
+        },
+      },
+      barebones: (s)=>{
+        let settings = templateroo.settings.eval.barebones
+        let open = settings.open
+        let close = settings.close
+        let escape = templateroo.genericTools.escape.re
+        let f = templateroo.tools.find._tag
+        let matches = f(s, escape(open), escape(close),0)
+        console.log("matches = ", matches)
+        for (let m of matches){
+          console.log("m=",m)
+          let e = m
+          let r = m.split(open)[1].split(close)[0]
+          try{
+            r = Function(`'use strict'; return (${r})`)()
+          }catch{}
+          s = s.replaceAll(e, r)
         }
+        return s
       }
     },
     custom: {//create and use code blocks in custom tags
@@ -1355,10 +1413,12 @@ var templateroo = {
             s = templateroo.features.activeVarReplacement.replace.string(s)
 
             let initialReplaceTags = ["for","if","switch"].map(v=>templateroo.settings[v].tagName)
-            let tagContents= templateroo.tools.find.tagsAttrObjs(s, initialReplaceTags)
+            let tagContents= templateroo.tools.find.tags(s, initialReplaceTags)
             let n = tagContents.length
             for (let i=n-1; i>=0; i--){
-              for (let elAttrObj of tagContents[i]){
+              for (let tc of tagContents[i]){
+                tc = templateroo.features.eval.barebones(tc)
+                let elAttrObj = templateroo.genericTools.dom.elAttrObj(tc)
                 let t = elAttrObj.tagName.toLowerCase()
                 if (initialReplaceTags.includes(t)){
                   let f = templateroo.features[t].replace.string
