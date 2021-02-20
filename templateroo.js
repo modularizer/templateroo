@@ -1016,12 +1016,12 @@ var templateroo = {
               vars.map(v2=>{
                 try{
                   let res = Function(`'use strict'; return (${v2})`).bind(v)()
-                  temp = temp.replace(varHandle + v2, res)
+                  temp = temp.replaceAll(varHandle + v2, res)
                 }catch{}
               })
             }else{
               console.log("temp=", temp, varHandle + handle, v)
-              temp = temp.replace(varHandle + handle, v)
+              temp = temp.replaceAll(varHandle + handle, v)
               console.log("temp=", temp)
             }
             out.push(temp)
