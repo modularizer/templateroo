@@ -13,6 +13,7 @@
       <custom tag="coin" var="~coinName">
         <b>~var = </b>
         <scrape src="https://coinmarketcap.com/currencies/~var/" query = 'div[class="priceValue___11gHJ"]' refresh = 10></scrape>
+        <br>
       </custom>
 
       <for var=coinName list=@coins>
