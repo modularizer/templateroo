@@ -1562,6 +1562,26 @@ var templateroo = {
           tt_fontsize=12pt
           tt_backgroundcolor=#c8c8c8
           >
+          <script>
+            tooltip = {
+              display:'none',
+              top: 100,
+              left: 100,
+              text: 'tooltip',
+              show: (s, top, left)=>{
+                tooltip.top = top
+                tooltip.left = left
+                tooltip.text = s
+                tooltip.display = 'block'
+              },
+              hide: ()=>{
+                tooltip.top = 0
+                tooltip.left = 0
+                tooltip.display = 'none'
+                tooltip.text = ''
+              }
+            }
+          </script>
           <script post>
             window.addEventListener("~tt_trigger",function(event){
               p = event.path
