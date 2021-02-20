@@ -201,12 +201,14 @@ var templateroo = {
           intended for use on window variables, but should work for keys
           of any Object*/
           let val = varObj[varName]
+          // if (! (val instanceof Object)){
+          //   val = Object.assign({},varObj[varName])
+          // }
           if (!save){
             delete varObj[varName]
           }
           let name = prefix + varName
           console.log(`adding callback functions to variable "${name}"`)
-          console.log({varName, val})
           let o = Object.defineProperty(varObj, varName,{
             set: (v)=>{
               // console.log("setting ", name)
@@ -215,9 +217,15 @@ var templateroo = {
 
               if (v instanceof Object){
                 let pre = prefix + varName + '.'
-                for (let k of Object.keys(v)){
-                  let v2 = Object.assign({}, varObj[varName])
-                  let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
+                // let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
+                for (let [k,v2] of Object.entries(v)){
+                  if (v2 instanceof Object){
+                    let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
+                    // delete v2
+                  }
+                  else{
+                    let ao= templateroo.genericTools.vars.addCbs.var(k, v, changeCb, setCb, getCb, pre, true)
+                  }
                 }
               }
               if (v != o){
@@ -236,9 +244,11 @@ var templateroo = {
           // if (val instanceof Object){
           //   let pre = prefix + varName + '.'
           //   for (let k of Object.keys(val)){
-          //     let ao= templateroo.genericTools.vars.addCbs.var(k, varObj[varName], changeCb, setCb, getCb, pre, true)
+          //     let v2 = Object.assign({}, varObj[varName])
+          //     let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
           //   }
           // }
+          console.log(varObj[varName])
           return varObj[varName]
         },
         vars: (varNames, varObj, changeCb=(vn,v)=>{}, setCb=(vn,v)=>{}, getCb=(vn,v)=>{})=>{
@@ -483,10 +493,16 @@ var templateroo = {
           let vn = templateroo.tools.find.varNames
           let avm = templateroo.settings.activeVarReplacement.varHandle//activeVarMode
           let avns = vn._findVarNames(s, avm)
-          // console.log({s, avns})
-          let newVars = avns.filter(vn=>!templateroo.state.activeVarNames.includes(vn))
-          newVars.map(v=>{templateroo.state.activeVarNames.push(v)})
-          // console.log(newVars)
+          // console.log(avns)
+          let newVars = avns.map(v=>{
+            // console.log(v)
+            v = v.split('.')[0].split('[')[0]
+            if (!templateroo.state.activeVarNames.includes(v)){
+              templateroo.state.activeVarNames.push(v)
+              return v
+            }
+          }).filter(v=>v!=undefined)
+          // console.log("newVars=", newVars)
           // console.log(templateroo.state.activeVarNames)
           templateroo.tools.addAutoUpdate(newVars)
           return avns
