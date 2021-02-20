@@ -7,17 +7,16 @@
     </head>
 
     <body>
+      <script>
+        coins = ["bitcoin", "ethereum","litecoin","tezos","algorand","dogecoin"]
+      </script>
       <custom tag="coin" var="~coinName">
         <b>~var = </b>
         <scrape src="https://coinmarketcap.com/currencies/~var/" query = 'div[class="priceValue___11gHJ"]' refresh = 10></scrape>
-        <br>
       </custom>
 
-      <for var=coinName list='["bitcoin", "ethereum","litecoin","tezos","algorand"]'>
+      <for var=coinName list=@coins>
         <coin/>
       </for>
-
-      <coin var=dogecoin />
-
     </body>
   </html>

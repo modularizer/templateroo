@@ -79,6 +79,9 @@ var templateroo = {
     shortcuts: {
       '@prettyPrint(':  `templateroo.genericTools.prettyPrint(`,
     },
+    postscript: {
+      tagName: 'postscript'
+    },
     varObj: window, //object which contains all of the variables which you wish to use for variable replacement
   },
   state: {//track the state of the templateroo Object and the document
@@ -784,7 +787,7 @@ var templateroo = {
           (made in genericTools.dom.elAttrObj)*/
           let entire = elAttrObj.outerHTML.replaceAll('&amp;','&')
           let r = entire
-          if (elAttrObj.tagName !== 'SCRIPT'){
+          if (!['script', templateroo.settings.postscript.tagname].includes(elAttrObj.tagName.toLowerCase())){
             let t = `<${elAttrObj.tagName.toLowerCase()}`
 
             //find all active variables in element
@@ -1160,12 +1163,18 @@ var templateroo = {
         string: (s)=>{
           /*eval text within eval tags*/
           let settings = templateroo.settings.eval
+
           let bbOpen = settings.barebones.open
           let bbClose = settings.barebones.close
           let tools = templateroo.tools
           let tag = settings.tagName
-
-          s = s.replaceAll(bbOpen, `<${tag}>`).replaceAll(bbClose,`</${tag}>`)
+          let escape = templateroo.genericTools.escape.re
+          let f = templateroo.tools.find._tag
+          let matches = f(s, escape(bbOpen), escape(bbClose),0)
+          console.log({matches})
+          matches.map(e=>{
+            s = s.replaceAll(e, e.replaceAll(bbOpen, `<${tag}>`).replaceAll(bbClose,`</${tag}>`))
+          })
 
           let elAttrObjs = tools.find.shallowestAttrObjs(s,[tag])
           elAttrObjs.map(o=>{
@@ -1428,6 +1437,8 @@ var templateroo = {
             }
             s = templateroo.features.eval.replace.string(s)
             s = templateroo.features.activeVarReplacement.label(s)
+            let psTag = templateroo.settings.postscript.tagName
+            s = s.replaceAll(`<${psTag}`, '<script').replaceAll(`</${psTag}`, '</script')
             return s
           }catch(err){
             console.log(s)
