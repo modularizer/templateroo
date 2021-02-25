@@ -9,12 +9,10 @@
     <body>
       <script>
       refreshInterval = 5
-      coins = ["bitcoin", "ethereum","litecoin","tezos","algorand","dogecoin"]
-      prices = {}
-      for (let coin of coins){prices[coin]=0}
+      coins = ["bitcoin", "ethereum","litecoin","tezos","algorand","dogecoin","celo"]
+      stocks = ["AMC:NYSE","GME:NYSE", "SPCE:NYSE", "BBBY:NASDAQ","AAPL:NASDAQ", "BA:NYSE","LRCX:NASDAQ"]
       </script>
       <tooltip></tooltip>
-
 
       <custom
         tag="coin"
@@ -28,7 +26,29 @@
             query = 'div[class="priceValue___11gHJ"]'
             innerText
             refresh=~refreshInterval
-            var="prices.~coinName"
+            style='font-size:30px;'
+            onclick= console.log
+            ></scrape>
+          <br>
+      </custom>
+
+      <custom
+        tag="stock"
+        ticker="~ticker"
+        tooltip= "scraping ~ticker price from https://www.google.com/finance/quote/~ticker every ~refreshInterval seconds"
+        style="cursor:default;"
+        >
+          <b style='font-size:30px;'>${String("~ticker").split(":")[0]} = </b>
+          <scrape
+            src="https://www.google.com/finance/quote/~ticker"
+            query = 'h1[class="KY7mAb"]'
+            style='font-size:20px;position:absolute;display:none;'
+            ></scrape>
+
+          <scrape
+            src="https://www.google.com/finance/quote/~ticker"
+            query = 'div[class="YMlKec fxKbKc"]'
+            refresh=~refreshInterval
             style='font-size:30px;'
             onclick= console.log
             ></scrape>
@@ -37,6 +57,10 @@
 
       <for var=coinName list=~coins>
         <coin/>
-      </for>
+      </for
+      <br><br><hr/><hr/><br>
+      <for var=ticker list=~stocks>
+        <stock/>
+      </for
     </body>
   </html>
