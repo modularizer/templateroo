@@ -1053,11 +1053,16 @@ var templateroo = {
             }
             out.push(temp)
           }
-          if (elAttrObj.initialhtml){
-            r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
+          if (Object.keys(elAttrObj).includes('replace')){
+            r = out.join("\n")
           }else{
-            r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
+            if (elAttrObj.initialhtml){
+              r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
+            }else{
+              r = entire.replace(`>${inner}<`,`>${out.join("\n")}<`)
+            }
           }
+
           let t = templateroo.settings.for.tagName
           r = r.replace('<'+ t, '<done'+ t)
           r = r.replace('</'+ t, '</done'+ t)
@@ -1078,13 +1083,18 @@ var templateroo = {
           let inner = elAttrObj.innerHTML
           let entire = elAttrObj.outerHTML.replaceAll('&amp;','')
           let r = entire
-          r = r.replaceAll(inner, ["",inner][1*(c=="true")])
-          if (!elAttrObj.initialhtml){
-            r = r.replace('>', '>')
+          let v = ["",inner][1*(c=="true")]
+          if (Object.keys(elAttrObj).includes('replace')){
+            r = v
+          }else{
+            r = r.replaceAll(inner, v)
+            if (!elAttrObj.initialhtml){
+              r = r.replace('>', '>')
+            }
+            let t = templateroo.settings.if.tagName
+            r = r.replace('<'+ t, '<done'+ t)
+            r = r.replace('</'+ t, '</done'+ t)
           }
-          let t = templateroo.settings.if.tagName
-          r = r.replace('<'+ t, '<done'+ t)
-          r = r.replace('</'+ t, '</done'+ t)
           return [entire, r]
         },
         el: (el)=>templateroo.features._generic.replace.el(el, 'if'),
@@ -1109,18 +1119,24 @@ var templateroo = {
           let re2 = new RegExp(res2, 'g')
           let cases = templateroo.genericTools.re.match(entire, re)
           let vals = templateroo.genericTools.re.match(entire, re2)
+          let v = inner
           if (cases.includes(c)){
             let i = cases.indexOf(c);
-            let v = vals[i]
-            r = r.replace(inner, v)
+            let v2 = vals[i]
           }
-          if (!elAttrObj.initialhtml){
-            r = r.replace('>', '>')
+          if (Object.keys(elAttrObj).includes('replace')){
+            r = v
+          }else{
+            r = r.replace(inner, v)
+            if (!elAttrObj.initialhtml){
+              r = r.replace('>', '>')
+            }
+
+            let t = templateroo.settings.switch.tagName
+            r = r.replace('<'+ t, '<done'+ t)
+            r = r.replace('</'+ t, '</done'+ t)
           }
 
-          let t = templateroo.settings.switch.tagName
-          r = r.replace('<'+ t, '<done'+ t)
-          r = r.replace('</'+ t, '</done'+ t)
           return [entire, r]
         },
         el: (el)=>templateroo.features._generic.replace.el(el, 'switch'),
@@ -1188,22 +1204,28 @@ var templateroo = {
           /*eval text within eval tags*/
           let settings = templateroo.settings.eval
 
-          let bbOpen = settings.barebones.open
-          let bbClose = settings.barebones.close
+          // let bbOpen = settings.barebones.open
+          // let bbClose = settings.barebones.close
           let tools = templateroo.tools
           let tag = settings.tagName
           let escape = templateroo.genericTools.escape.re
           let f = templateroo.tools.find._tag
-          let matches = f(s, escape(bbOpen), escape(bbClose),0)
-          // console.log({matches})
-          matches.map(e=>{
-            s = s.replaceAll(e, e.replaceAll(bbOpen, `<${tag}>`).replaceAll(bbClose,`</${tag}>`))
-          })
+          // let matches = f(s, escape(bbOpen), escape(bbClose),0)
+          // // console.log({matches})
+          // matches.map(e=>{
+          //   s = s.replaceAll(e, e.replaceAll(bbOpen, `<bbeval>`).replaceAll(bbClose,`</bbeval}>`))
+          // })
+          // let elAttrObjs = tools.find.shallowestAttrObjs(s,['bbeval'])
+          // elAttrObjs.map(o=>{
+          //   let e = o.outerHTML
+          //   let r = templateroo.features.eval.replace.barebones(e)
+          //   s = s.replace(e,r)
+          // })
+          s = templateroo.features.eval.barebones(s)
 
           let elAttrObjs = tools.find.shallowestAttrObjs(s,[tag])
           elAttrObjs.map(o=>{
             let [e,r] = templateroo.features.eval.replace.elAttrObj(o)
-            // console.log({s,e,r,o})
             s = s.replace(e,r)
           })
           return s
@@ -1223,7 +1245,9 @@ var templateroo = {
           let r = m.split(open)[1].split(close)[0]
           try{
             r = Function(`'use strict'; return (${r})`)()
-          }catch{}
+          }catch{
+            r = e
+          }
           s = s.replaceAll(e, r)
         }
         return s
@@ -1328,14 +1352,26 @@ var templateroo = {
         }
       }
     },
+    svg: {
+      getEncodedSVG: (url)=>{
+        let data;
+        templateroo.tools.http.get(url, (svgInnerHTML)=>{
+          data = templateroo.features.svg.encodeSVG(svgInnerHTML)
+        }, false)
+        return data
+      },
+      encodeSVG: (svgInnerHTML)=>{
+        let encoded = encodeURIComponent(svgInnerHTML)
+        let data = `data:image/svg+xml,${encoded}`
+        return data
+      },
+    },
     faviconsvg: {//add an svg as the site favicon
       make: (svgInnerHTML)=>{
-        let encoded = encodeURIComponent(svgInnerHTML)
         let el = document.createElement('link')
         el.setAttribute('rel','icon')
         el.setAttribute('type', "image/svg+xml")
-        el.setAttribute('href', `data:image/svg+xml,${encoded}`)
-        // console.log("fav=", el)
+        el.setAttribute('href', templateroo.features.svg.encodeSVG(svgInnerHTML))
         return el
       },
       makeEl : ()=>{
@@ -1444,6 +1480,7 @@ var templateroo = {
 
             //replace active variables and add callbacks
             s = templateroo.features.activeVarReplacement.replace.string(s)
+            s = templateroo.features.eval.barebones(s)
 
             let initialReplaceTags = ["for","if","switch"].map(v=>templateroo.settings[v].tagName)
             let tagContents= templateroo.tools.find.tags(s, initialReplaceTags)
