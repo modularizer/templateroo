@@ -201,27 +201,20 @@ var templateroo = {
           intended for use on window variables, but should work for keys
           of any Object*/
           let val = varObj[varName]
-          // if (! (val instanceof Object)){
-          //   val = Object.assign({},varObj[varName])
-          // }
           if (!save){
             delete varObj[varName]
           }
           let name = prefix + varName
-          console.log(`adding callback functions to variable "${name}"`)
           let o = Object.defineProperty(varObj, varName,{
             set: (v)=>{
-              // console.log("setting ", name)
               let o = this['_'+ varName]
               this['_'+ varName] = v;
 
               if (v instanceof Object){
                 let pre = prefix + varName + '.'
-                // let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
                 for (let [k,v2] of Object.entries(v)){
                   if (v2 instanceof Object){
                     let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
-                    // delete v2
                   }
                   else{
                     let ao= templateroo.genericTools.vars.addCbs.var(k, v, changeCb, setCb, getCb, pre, true)
@@ -235,20 +228,11 @@ var templateroo = {
             },
             get: ()=>{
               let v = this['_' + varName];
-              // console.log("getting ", name)
               getCb(varName, v)
               return v
             },
           })
           varObj[varName]= val
-          // if (val instanceof Object){
-          //   let pre = prefix + varName + '.'
-          //   for (let k of Object.keys(val)){
-          //     let v2 = Object.assign({}, varObj[varName])
-          //     let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
-          //   }
-          // }
-          console.log(varObj[varName])
           return varObj[varName]
         },
         vars: (varNames, varObj, changeCb=(vn,v)=>{}, setCb=(vn,v)=>{}, getCb=(vn,v)=>{})=>{
@@ -282,7 +266,6 @@ var templateroo = {
           let v= [varObj]
           let final = vns.pop()
           vns.map(vn=>v.push(v[v.length-1][vn]))
-          // console.log(`${varName}=${val}`)
           v[v.length-1][final] = val
           return val
         }catch{
@@ -300,7 +283,6 @@ var templateroo = {
             let final = vns.pop()
             vns.map(vn=>v.push(v[v.length-1][vn]))
             let val = v[v.length-1][final]
-            // console.log(`${varName}=${val}`)
             return val
           }catch{
             return undefined
@@ -493,17 +475,13 @@ var templateroo = {
           let vn = templateroo.tools.find.varNames
           let avm = templateroo.settings.activeVarReplacement.varHandle//activeVarMode
           let avns = vn._findVarNames(s, avm)
-          // console.log(avns)
           let newVars = avns.map(v=>{
-            // console.log(v)
             v = v.split('.')[0].split('[')[0]
             if (!templateroo.state.activeVarNames.includes(v)){
               templateroo.state.activeVarNames.push(v)
               return v
             }
           }).filter(v=>v!=undefined)
-          // console.log("newVars=", newVars)
-          // console.log(templateroo.state.activeVarNames)
           templateroo.tools.addAutoUpdate(newVars)
           return avns
         },
@@ -534,7 +512,6 @@ var templateroo = {
           //this makes it easier to perform the match
           s = s.replaceAll(pre,` ${pre}`) + ' '
           //string should start with some prefix, and end with ",<,>, or space
-          //[\\w\\d\\[\\]\\."']
           let re = new RegExp(`${pre}([\\w\\d\\[\\]\\."']*?)${post}`,'g')
           //find matches
           let m = templateroo.genericTools.re.match(s, re)
@@ -677,10 +654,6 @@ var templateroo = {
         if (Object.keys(elAttrObj).includes(templateroo.settings.scrape.attrNames.callback)){
           cb = elAttrObj[templateroo.settings.scrape.attrNames.callback]
         }
-
-        // for (let [k,v] of Object.entries(data)){
-        //   cb = cb.replaceAll(k,v)
-        // }
         if (cb){
           try{
             Function(`'use strict'; return (${cb})`).bind(data)()
@@ -696,7 +669,7 @@ var templateroo = {
         let r = url
         try{
           xhttp.onload = function() {
-            console.log("response = ", {xhttp})
+            // console.log("response = ", {xhttp})
             if (this.readyState == 4 && this.status == 200) {
               r = xhttp.response
               cb(r)
@@ -813,7 +786,6 @@ var templateroo = {
 
             //find all active variables in element
             let varNames = templateroo.tools.find.varNames.active(entire)
-            // console.log({entire, varNames})
 
             //update class to include active variables
             let classPresent=false
@@ -847,12 +819,10 @@ var templateroo = {
               r = templateroo.features.activeVarReplacement._replaceString(r)
             }
           }else if (!Object.keys(elAttrObj).includes(templateroo.settings.postscript.attrName)){
-            // console.log(elAttrObj)
             r = ''
           }else{
             // console.log(elAttrObj)
           }
-          // console.log({entire, r})
           return [entire, r]
         },
         string: (s, elAttrObj= undefined)=>{
@@ -863,13 +833,7 @@ var templateroo = {
               s = templateroo.features.activeVarReplacement.replace.string(s, v)
             })
           }else{
-            // console.log({elAttrObj})
             let [entire, r] = templateroo.features.activeVarReplacement.replace.elAttrObj(elAttrObj)
-            // if (!s.includes(entire)){
-            //   console.log("s includes entire", s.includes(entire), s==entire)
-            //   console.log(s)
-            //   console.log(entire)
-            // }
             s = s.replaceAll(entire, r)
 
           }
@@ -890,21 +854,18 @@ var templateroo = {
       unlabel: (s)=>{//remove active var labels in string
         /*remove active variable labels in an html string*/
         //do not have to worry about nesting
-        // console.log("unlabeling ", s)
         let tag = templateroo.settings.activeVarReplacement.label.tagName
         let re = new RegExp(`<${tag}[^]*?>(.*?)<\/${tag}>`,'g')
         let matches = [...s.matchAll(re)]
-        // console.log({re, tag, matches})
         for (let m of matches){
           s = s.replace(m[0],m[1])
         }
-        // console.log("unlabelled = ", s)
         return s
       },
       varChangeCb: (varName, varVal)=>{
         /*callback function called every time the value
         of an active variable is chaged*/
-        console.log(varName,"= ", varVal)
+        // console.log(varName,"= ", varVal)
         let varNames = templateroo.state.activeVarNames
         let classMode = templateroo.settings.activeVarReplacement.varClass
         let elementChangeCb = templateroo.features.activeVarReplacement.elChangeCb
@@ -922,17 +883,12 @@ var templateroo = {
         els.map(elementChangeCb)
       },
       elChangeCb: (el)=>{
-        // console.log("updating ", el)
-
         let entire = el.outerHTML
         let elAttrObj = templateroo.genericTools.dom.elAttrObj(entire)
-        // console.log(elAttrObj.initialhtml)
         if (elAttrObj.initialhtml){
           let ih = elAttrObj.initialhtml
           let s = templateroo.state.initial.get(ih)
-          // console.log({s,ih})
           let r = templateroo.features.template.replace.string(s)
-          // console.log({s,r,ih})
           el.outerHTML = r
         }
       },
@@ -1034,9 +990,7 @@ var templateroo = {
           let out = [];
           for (let v of list){
             let temp = inner
-            // console.log("v=",v)
             if (v instanceof Object || v instanceof Array){
-              // console.log('here')
               temp = temp.replaceAll(varHandle + handle, varHandle + 'this')
               let f = templateroo.tools.find.varNames._potential
               let vars = f(temp, `${varHandle}x`)
@@ -1047,9 +1001,7 @@ var templateroo = {
                 }catch{}
               })
             }else{
-              // console.log("temp=", temp, varHandle + handle, v)
               temp = temp.replaceAll(varHandle + handle, v)
-              // console.log("temp=", temp)
             }
             out.push(temp)
           }
@@ -1083,7 +1035,10 @@ var templateroo = {
           let inner = elAttrObj.innerHTML
           let entire = elAttrObj.outerHTML.replaceAll('&amp;','')
           let r = entire
-          let v = ["",inner][1*(c=="true")]
+          if (!["true", "false"].includes(c)){
+            return [entire, entire]
+          }
+          let v = [inner, ""][1*(c=="false")]
           if (Object.keys(elAttrObj).includes('replace')){
             r = v
           }else{
@@ -1147,9 +1102,7 @@ var templateroo = {
       replace: {//DOES NOT do active var replacement, this should be done beforehand
         el: (el)=> templateroo.features.eval.replace.elAttrObj(el),
         elAttrObj: (elAttrObj)=>{
-          // let entire = elAttrObj.outerHTML.replaceAll('&amp;','')
           let entire = elAttrObj.outerHTML
-          // console.log("eval entire = ", entire)
           let el = templateroo.genericTools.dom.parse.el(entire)
           let ot = elAttrObj.outerText
 
@@ -1166,14 +1119,12 @@ var templateroo = {
 
           let varNames = templateroo.tools.find.varNames.active(ot)//find sorted variable names
           let m = templateroo.settings.activeVarReplacement.varHandle
-          // console.log({varNames,ot})
           let gt = templateroo.genericTools
           let f = gt.vars.get.valString//function to find value
           let vo = templateroo.settings.varObj
           varNames.map(vn=>{
             let rep = [m.replace('x',vn), gt.escape.html(f(vn,vo),false).replaceAll("'",'"')]
             ot = ot.replaceAll(rep[0], rep[1])
-            // console.log(rep)
             classes.push('.'+ vn)
           })
 
@@ -1188,39 +1139,20 @@ var templateroo = {
           let i = templateroo.features.activeVarReplacement.unlabel(ot)
           let r =entire
           try{
-            // r = entire.replace(i,eval(i))
-            // console.log("eval ", i)
             el.innerText = Function(`'use strict'; return (${i})`)()
             r = el.outerHTML
-            // console.log({r})
-            // console.log("r=", Function(`'use strict'; return (${i})`)())
-            // r = entire.replace(i,Function(`return (${i})`))
           }catch(err){
-            console.log("error in eval.replace.elAttrObj: ", err)
+            console.warn("error in eval.replace.elAttrObj: ", err)
           }
           return [entire, r]
         },
         string: (s)=>{
           /*eval text within eval tags*/
           let settings = templateroo.settings.eval
-
-          // let bbOpen = settings.barebones.open
-          // let bbClose = settings.barebones.close
           let tools = templateroo.tools
           let tag = settings.tagName
           let escape = templateroo.genericTools.escape.re
           let f = templateroo.tools.find._tag
-          // let matches = f(s, escape(bbOpen), escape(bbClose),0)
-          // // console.log({matches})
-          // matches.map(e=>{
-          //   s = s.replaceAll(e, e.replaceAll(bbOpen, `<bbeval>`).replaceAll(bbClose,`</bbeval}>`))
-          // })
-          // let elAttrObjs = tools.find.shallowestAttrObjs(s,['bbeval'])
-          // elAttrObjs.map(o=>{
-          //   let e = o.outerHTML
-          //   let r = templateroo.features.eval.replace.barebones(e)
-          //   s = s.replace(e,r)
-          // })
           s = templateroo.features.eval.barebones(s)
 
           let elAttrObjs = tools.find.shallowestAttrObjs(s,[tag])
@@ -1238,9 +1170,7 @@ var templateroo = {
         let escape = templateroo.genericTools.escape.re
         let f = templateroo.tools.find._tag
         let matches = f(s, escape(open), escape(close),0)
-        // console.log("matches = ", matches)
         for (let m of matches){
-          // console.log("m=",m)
           let e = m
           let r = m.split(open)[1].split(close)[0]
           try{
@@ -1472,6 +1402,34 @@ var templateroo = {
             //escape
             s = templateroo.features.escape.replace.string(s)
 
+            let firstTagContents = templateroo.tools.find.tags(s, ['first'])[0]
+            if (firstTagContents){
+              let firstTagEAOs = firstTagContents.map(s=>{
+                  let eao = templateroo.genericTools.dom.elAttrObj(s)
+                  if (eao.order == undefined){
+                    eao.order = 0
+                  }
+                  eao.outerHTML = s
+                  return eao
+                }
+              )
+              console.log({firstTagEAOs})
+              let firstNums = firstTagEAOs.map(eao=> eao.order*1)
+              let firstLevels = Math.max(...firstNums)
+              console.log({firstNums, firstLevels})
+              for (let i=0; i<=firstLevels; i++){
+                let eaos = firstTagEAOs.map(eao=>{if (eao.order==i){return eao}}).filter(v=>v!= undefined)
+                console.log({eaos})
+                for (let eao of eaos){
+                  let e = eao.outerHTML
+                  let r = templateroo.features.template.replace.string(eao.innerHTML)
+                  r = r.replaceAll(eao.escape, '')
+                  s = s.replace(e, r)
+                }
+              }
+            }
+
+
             //set custom tags
             s = templateroo.features.custom.replace.string(s)
 
@@ -1482,15 +1440,16 @@ var templateroo = {
             s = templateroo.features.activeVarReplacement.replace.string(s)
             s = templateroo.features.eval.barebones(s)
 
-            let initialReplaceTags = ["for","if","switch"].map(v=>templateroo.settings[v].tagName)
-            let tagContents= templateroo.tools.find.tags(s, initialReplaceTags)
+
+            let secondaryReplaceTags = ["for","if","switch"].map(v=>templateroo.settings[v].tagName)
+            let tagContents= templateroo.tools.find.tags(s, secondaryReplaceTags)
             let n = tagContents.length
             for (let i=n-1; i>=0; i--){
               for (let tc of tagContents[i]){
                 tc = templateroo.features.eval.barebones(tc)
                 let elAttrObj = templateroo.genericTools.dom.elAttrObj(tc)
                 let t = elAttrObj.tagName.toLowerCase()
-                if (initialReplaceTags.includes(t)){
+                if (secondaryReplaceTags.includes(t)){
                   let f = templateroo.features[t].replace.string
                   s = f(s)
                 }
@@ -1500,7 +1459,7 @@ var templateroo = {
             s = templateroo.features.activeVarReplacement.label(s)
             return s
           }catch(err){
-            console.log(s)
+            console.warn(s)
             throw err
           }
         },
@@ -1542,11 +1501,6 @@ var templateroo = {
             let group = groups[i]
             group.map(o=>{
               let [e,r] = f(o)
-              // if (!s.includes(e)){
-              //   console.warn("s=",s)
-              //   console.warn("e=",e)
-              //   console.warn("r=",r)
-              // }
               s = s.replaceAll(e,r)
             })
           }
@@ -1569,54 +1523,60 @@ var templateroo = {
 
 
   coolTags: {
-    tooltip: {
+    tooltiparoo: {
       set: ()=>{
-        window.tooltip = {
+        window.tooltiparoo = {
           display:'none',
           top: 100,
           left: 100,
-          text: 'tooltip',
+          text: 'tooltiparoo',
           show: (s, top, left)=>{
-            tooltip.top = top
-            tooltip.left = left
-            tooltip.text = s
-            tooltip.display = 'block'
+            tooltiparoo.top = top
+            tooltiparoo.left = left
+            tooltiparoo.text = s
+            tooltiparoo.display = 'block'
           },
           hide: ()=>{
-            tooltip.top = 0
-            tooltip.left = 0
-            tooltip.display = 'none'
-            tooltip.text = ''
+            tooltiparoo.top = 0
+            tooltiparoo.left = 0
+            tooltiparoo.display = 'none'
+            tooltiparoo.text = ''
           }
         }
       },
       html:`
         <custom
-          tag=tooltip
-          tt_attrname=tooltip
-          tt_trigger=mousemove
+          tag=tooltiparoo
+          tt_attrname=tooltiparoo
+          tt_trigger=mousedown
           tt_textcolor=#000
           tt_fontsize=12pt
           tt_backgroundcolor=#c8c8c8
           >
           <script>
-            tooltip = {
+            tooltiparoo = {
               display:'none',
               top: 100,
               left: 100,
-              text: 'tooltip',
+              text: 'tooltiparoo',
               show: (s, top, left)=>{
-                tooltip.top = top
-                tooltip.left = left
-                tooltip.text = s
-                tooltip.display = 'block'
+                tooltiparoo.top = top
+                tooltiparoo.left = left
+                tooltiparoo.text = s
+                tooltiparoo.display = 'block'
+                tooltiparoo.hold = true
+                setTimeout(()=>{tooltiparoo.hold = false;}, 100 )
               },
               hide: ()=>{
-                tooltip.top = 0
-                tooltip.left = 0
-                tooltip.display = 'none'
-                tooltip.text = ''
-              }
+                if (!tooltiparoo.hold){
+                  tooltiparoo.top = 0
+                  tooltiparoo.left = 0
+                  tooltiparoo.display = 'none'
+                  tooltiparoo.text = ''
+                  tooltiparoo.hideTimer = false
+                }
+              },
+              hold: false
             }
           </script>
           <script post>
@@ -1629,25 +1589,23 @@ var templateroo = {
                   if (p[i].hasAttribute){
                     if (p[i].hasAttribute('~tt_attrname')){
                       found = p[i]
+                      tooltiparoo.show(found.getAttribute('~tt_attrname'), event.clientY, event.clientX)
                     }
                   }
                   i++;
                 }
               }
 
-              if (found){
-                let bb = found.getBoundingClientRect()
-                tooltip.show(found.getAttribute('~tt_attrname'), bb.bottom, bb.right)
-              }else{
-                tooltip.hide()
+              if (!found){
+                tooltiparoo.hide()
               }
             })
           </script>
           <div style="position: relative; width: 0; height: 0">
             <div
               style="
-                top:@tooltip.top;
-                left:@tooltip.left;
+                top:@tooltiparoo.top;
+                left:@tooltiparoo.left;
                 position:absolute;
                 z-index:100;
                 font-size: ~tt_fontsize;
@@ -1655,13 +1613,12 @@ var templateroo = {
                 background-color:~tt_backgroundcolor;
                 margin: -10px;
                 padding: 10px;
-                width: 30vw;
+
                 height: auto;
-                word-break:break-all;
-                display: @tooltip.display;
+                display: @tooltiparoo.display;
                 border-radius: 5px;
                 ">
-              @tooltip.text
+              @tooltiparoo.text
             </div>
           </div>
         </custom>
@@ -1680,7 +1637,6 @@ var templateroo = {
     if (a.init !== "false"){
       let remover = ()=>{}
       let e = document.addEventListener('DOMContentLoaded', ()=>{
-        console.log(a)
         remover()
         templateroo.templateDoc()
       })
