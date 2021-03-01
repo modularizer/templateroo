@@ -1,0 +1,420 @@
+<!doctype html>
+  <html>
+    <head>
+      <title>Graph</title>
+      <!-- <script src = './js/templateroo.js'></script> -->
+      <script src ='https://geargaroo.github.io/templateroo/js/templateroo.js'></script>
+      <faviconsvg src ='https://geargaroo.github.io/templateroo/mySVGFavicon.svg'></faviconsvg>
+    </head>
+
+    <body>
+      <tooltiparoo tt_trigger=mousedown></tooltiparoo>
+
+      <custom
+        tag="graph"
+        id = 'graph0'
+        title = 'Graph 0'
+        xmin=0
+        xmax=52
+        xtickinterval=10
+        ymin=0
+        ymax=52
+        ytickinterval=10
+        data0="[1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,6,7,8,9,10,11,12,13,14,15,14,13,12,11,10]",
+        name0="line0"
+        color0=#0f0
+        data1="[1,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,6,6,6,6,7,7,7,7]",
+        name1="line1"
+        color1=#ff0
+        items=2
+        >
+        <script>
+          cursoroo = {x: 0, y: 0}
+          grapharoo = {
+            z: 1,
+            makeGraphObj: (dataObj)=> {
+              let graphObj = {}
+              if (dataObj instanceof Array){
+                if (dataObj[0] instanceof Array){
+                  for (let [i, data] of Object.entries(dataObj)){
+                    graphObj[i] = grapharoo.makeGraphObj(data, i)
+                  }
+                }else{
+                  graphObj[0] = {
+                    x: new Array(dataObj.length).fill(1).map((_,i)=>i),
+                    y: dataObj.map(v=>v)
+                  }
+                }
+              }else{
+                graphObj = dataObj.copy()
+              }
+              return graphObj
+            },
+            makeGraph: (dataObj)=>{
+              let graphObj = grapharoo.makeGraphObj(dataObj)
+              for (let k of Object.keys(graphObj)){
+                graphObj[k].path = makeLinePath(graphObj[k])
+              }
+              return graphObj
+            },
+            makeLinePath: (dataObj)=>{
+              let graphObj = grapharoo.makeGraphObj(dataObj)[0]
+              let x= graphObj.x;
+              let y= graphObj.y;
+              let s = `m ${x[0]},${y[0]}`
+              for (let i=1; i< y.length; i++){
+                s += ` ${x[i]- x[i-1]},${y[i]- y[i-1]}`
+              }
+              return s
+            },
+          }
+
+        </script>
+        <script post>
+          ~id = {
+            id: ~id,
+            title: "~title",
+            xmin: ~xmin,
+            xmax: ~xmax,
+            xtickinterval: ~xtickinterval,
+            ymin: ~ymin,
+            ymax: ~ymax,
+            ytickinterval: ~ytickinterval,
+            data: {},
+            top: 0,
+            getNearest: (x,y,d)=>{
+              let [x0i, x1i] = ~id.getValNeighbors(x, d.x)
+              let x0 = d.x[x0i]
+              let x1 = d.x[x1i]
+              if ((x-x0)<=(x1 -x)){
+                return [x0, d.y[x0i]]
+              }else{
+                return [x1, d.y[x1i]]
+              }
+            },
+            getValNeighbors: (x, d)=>{
+              let n = d.filter(v=> v<=x).length
+              if (n == d.length){
+                return [n, n]
+              }else{
+                return [n-1, n]
+              }
+            },
+            getInterp: (x,y,d)=>{
+              let [x0i, x1i] = ~id.getValNeighbors(x, d.x)
+              let x0 = d.x[x0i]
+              let x1 = d.x[x1i]
+              let y0 = d.y[x0i]
+              let y1 = d.y[x1i]
+
+              let xi = x0
+              if (x0 != x1){
+                xi = (x - x0)/(x1 - x0)
+              }
+              y = y0 + xi*(y1 - y0)
+              return xi , y
+            },
+            setTop: (event)=>~id.setTopEl(event.target),
+            setTopId: (id)=>~id.setTopEl(document.getElementById(id)),
+            setTopEl: (el)=>{
+              // console.log(el)
+              ~id.top = el.id.split('path')[1]
+              document.getElementById('~id topPath').innerHTML = el.outerHTML
+            },
+            setLocate: (event)=>{
+              let cx = event.clientX
+              let cy = event.clientY
+              cursoroo.target = event.target
+              ~id.setLocatePosition(cx, cy)
+            },
+            setLocatePosition: (cx, cy)=>{
+              let o =  ~id.findPosition(cx, cy)
+              cursoroo.x = Math.round(o.x)
+              cursoroo.y = Math.round(o.y)
+            },
+            showLocateBlock: false,
+            showLocate: ()=>{
+              console.log("show")
+              cursoroo.display = "block"
+              ~id.showLocateBlock = true;
+              setTimeout(()=>{~id.showLocateBlock = false}, 500)
+            },
+            hideLocate: ()=>{
+              if (!~id.showLocateBlock){
+                console.log("hide")
+                cursoroo.display = "none"
+              }
+            },
+            unsetLocate: ()=>{
+              cursoroo.x = 0
+              cursoroo.y = 0
+            },
+            findPosition: (cx, cy)=>{
+              let ref = document.getElementById('~id axRef').getBoundingClientRect()
+              let scale = ref.width
+              let x = (cx - ref.left)/scale
+              let y = (ref.bottom - cy)/scale
+              let [xd, yd] = ~id.getNearest(x, y, ~id.data[~id.top].data)
+              // console.log(xd, yd)
+              return {x: xd, y: yd, scale: scale}
+            }
+          }
+          cursoroo.display = 'block'
+          // let el = templateroo.genericTools.dom.elAttrObj(document.getElementById('~id'))
+
+          let el = templateroo.genericTools.dom.attrObj(document.getElementById('~id'))
+          for (let [k,v] of Object.entries(el)){
+            if (k.startsWith('data')){
+              k = k.split('data')[1]
+              let d = JSON.parse(v)
+              let p = grapharoo.makeLinePath(d)
+              ~id.data[k] = { path: p, data: grapharoo.makeGraphObj(d)[0]}
+            }
+          }
+          // console.log( "~id =", ~id )
+        </script>
+        <svg
+          id="~id svg"
+          xmlns:svg="http://www.w3.org/2000/svg"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+          width="110mm"
+          height="70mm"
+          viewBox="-20 -50 120 70"
+          version="1.1"
+          style="height:100%;width:100%;"
+          >
+            <g id="~id axesGroup">
+              <g id="~id locate">
+                <path id="~id locateX"
+                  transform="scale(1,-1)"
+                  d="m @cursoroo.x,0 v @cursoroo.y"
+                  style="display:@cursoroo.display;fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+                <path id="~id locateY"
+                  transform="scale(1,-1)"
+                  d="m 0,@cursoroo.y h @cursoroo.x"
+                  style="display:@cursoroo.display;fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+              </g>
+              <rect id = '~id axRef'
+                x = 0
+                y = 0
+                width = 1
+                height = 1
+                style = 'opacity:0; stroke-width: 0px;'/>
+              <g id="~id grid">
+                <g id="~id xAxisGrid" transform="scale(1,-1)">
+                  <for var=n range="${ Math.floor((~xmax - ~xmin )/~xtickinterval ) }" replace>
+                    <path id="~id xAxisGrid~n"
+                       style="fill:none;stroke:#969696;stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                       d="M ${~xtickinterval*(~n+1)},0 v ${ ~ymax - ~ymin }"/>
+                  </for>
+                </g>
+                <g id="~id yAxisGrid" transform="scale(1,-1)">
+                  <for var=n range="${ Math.floor((~ymax - ~ymin )/~ytickinterval ) }" replace>
+                    <path id="~id yAxisGrid~n"
+                       style="fill:none;stroke:#969696;stroke-width:0.5px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                       d="M 0,${~ytickinterval*(1 + ~n)} H ${ ~xmax - ~xmin }"/>
+                  </for>
+                </g>
+              </g>
+              <g id="~id yAxisGroup">
+                <path id="~id yAxis"
+                  transform="scale(1,-1)"
+                  d="m 0,0 v ${ ~ymax - ~ymin }"
+                  style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+                <path id="~id yAxisArrow"
+                   transform="scale(1,-1)"
+                   inkscape:transform-center-y="-0.5"
+                   d="M 0,${~ymax - ~ymin + 2} 1.2,${~ymax - ~ymin} l -2.4,0  z"
+                   style="opacity:0.925;fill:#c4c4c4;fill-opacity:1;stroke:#050000;stroke-width:1px;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                   />
+                <g id="~id yAxisTicks"
+                  transform="scale(1,-1)">
+                    <for var=n range="${ Math.floor((~ymax - ~ymin )/~ytickinterval ) }" replace>
+                      <path id="~id yAxisTick~n"
+                         style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                         d="M -1,${10*(1 + ~n)}  H 1"/>
+                    </for>
+                </g>
+                <circle id="~id yAxisEndDot"
+                  transform="scale(1,-1)"
+                  r="1"
+                  cy="${~ymax - ~ymin }"
+                  cx="0"
+                  style="opacity:0.925;fill:#c4c4c4;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                <g id="~id yAxisTickLabels">
+                  <for var=n range="${ Math.floor((~ymax - ~ymin )/~ytickinterval ) }" replace>
+                    <text id="~id yAxisTickLabel~n"
+                      xml:space="preserve"
+                      style="font-style:normal;font-weight:normal;font-size:2.67px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px"
+                      x="-3"
+                      y="${-~ytickinterval*(1 + ~n)}">${~ytickinterval*(~n + 1)}</text>
+                  </for>
+                </g>
+                <text id="~id yAxisLabel"
+                   y="${-0.5*~ytickinterval - ~ytickinterval}"
+                   x="-20"
+                   style="font-style:normal;font-weight:normal;font-size:2.67px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px"
+                   xml:space="preserve">y-axis label</text>
+              </g>
+              <g id="~id yAxisRightGroup" >
+                <path
+                  id="~id yAxisRight"
+                  transform="scale(1,-1)"
+                  style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                  d="m ${ ~xmax - ~xmin + 1},0 v ${~ymax - ~ymin }"
+                  sodipodi:nodetypes="ccc" />
+                 <path
+                  id="~id yAxisRightArrow"
+                  transform="scale(1,-1)"
+                  inkscape:transform-center-y="-0.5"
+                  d="M ${ ~xmax - ~xmin + 1},${ ~ymax - ~ymin + 2} ${ ~xmax - ~xmin + 2.2},${ ~ymax - ~ymin } l -2.4,0  z"
+                  style="opacity:0.925;fill:#c4c4c4;fill-opacity:1;stroke:#050000;stroke-width:1px;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                  />
+                <g id="~id yAxisRightTicks">
+                  <for var=n range="${ Math.floor((~ymax - ~ymin )/~ytickinterval ) }" replace>
+                    <path
+                      id="~id yAxisRightTick~n"
+                      transform="scale(1,-1)"
+                      d="M ${ ~xmax - ~xmin },${~ytickinterval*(1 + ~n)} H ${ ~xmax - ~xmin + 2}"
+                      style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+                  </for>
+                </g>
+                <circle
+                  id="~id yAxisRightEndDot"
+                  transform="scale(1,-1)"
+                  style="opacity:0.925;fill:#c4c4c4;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                  cx="${ ~xmax - ~xmin + 1}"
+                  cy="${ ~ymax - ~ymin + 1}"
+                  r="1" />
+                <g id="~id yAxisRightTickLabels">
+                  <for var=n range="${ Math.floor((~ymax - ~ymin )/~ytickinterval ) }" replace>
+                    <text id="~id yAxisRightTickLabel0"
+                       y="${-~ytickinterval*(1 + ~n)}"
+                       x="${ ~xmax - ~xmin + 2}"
+                       style="font-style:normal;font-weight:normal;font-size:2.67px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px"
+                       xml:space="preserve">${~ytickinterval*(~n +1)}</text>
+                  </for>
+                </g>
+                <text id="~id yAxisRightLabel"
+                   y="${-0.5*~ytickinterval - ~ytickinterval}"
+                   x="${ ~xmax - ~xmin + 2}"
+                   style="font-style:normal;font-weight:normal;font-size:2.67px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px"
+                   xml:space="preserve">y-axis right label</text>
+              </g>
+              <g id="~id xAxisGroup">
+                <path id="~id xAxis"
+                  d="M 0,0 H ${ ~xmax - ~xmin + 1}"
+                  style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+                <path id="~id xAxisArrow"
+                  inkscape:transform-center-y="0"
+                  inkscape:transform-center-x="-0.5"
+                  d="m ${ ~xmax - ~xmin + 2},0 -2,1.2 V 0 -1.2 z"
+                  style="opacity:0.925;fill:#c4c4c4;fill-opacity:1;stroke:#050000;stroke-width:1px;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                  />
+                <g id="~id xAxisTicks">
+                  <for var=n range="${ Math.floor((~xmax - ~xmin )/~xtickinterval ) }" replace>
+                    <path id="xAxisTick~n"
+                      style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+                      d="m ${~xtickinterval*(1 + ~n)},1 v -2"/>
+                  </for>
+                </g>
+                <circle id="~id xAxisEndDot"
+                  r="1"
+                  cy="0"
+                  cx="${ ~xmax - ~xmin +1 }"
+                  style="opacity:0.925;fill:#c4c4c4;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+                <g id="xAxisTickLabels">
+                  <for var=n range="${ Math.floor((~xmax - ~xmin )/~xtickinterval ) }" replace>
+                    <text id="~id xAxisTickLabel~n"
+                      xml:space="preserve"
+                      style="font-style:normal;font-weight:normal;font-size:2.67px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px"
+                      x="${~xtickinterval*(~n+1)}"
+                      y="3">${~xtickinterval*(~n+1)}</text>
+                  </for>
+                </g>
+                <text id="~id xAxisLabel"
+                  y="8"
+                  x="${(~xmax - ~xmin)/2 - 10}"
+                  style="font-style:normal;font-weight:normal;font-size:2.67px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px"
+                  xml:space="preserve">x-axis label</text>
+              </g>
+              <circle id="~id origin"
+                 style="opacity:0.925;fill:#c4c4c4;fill-opacity:1;stroke:#050000;stroke-width:1px;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                 cx="0"
+                 cy="0"
+                 r="1" />
+              <text id="~id title"
+                xml:space="preserve"
+                style="font-style:normal;font-weight:normal;font-size:5.33px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px"
+                x="${(~xmax - ~xmin)/2 - 10}"
+                y="${-1*(~ymax - ~ymin )}">~title</text>
+            </g>
+            <g id="~id plotGroup" tooltiparoo = '@cursoroo.x , @cursoroo.y'>
+              <first escape=%first%>
+                <for var=num range = 10 replace>
+                    <g id="~id ~name~num">
+                      <path id="~id ~name~num path~num"
+                        transform="scale(1,-1)"
+                        style="fill:none;stroke:~color~num;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                        d = "${ grapharoo.makeLinePath(~data~num) }"
+                        onmousemove = "~id.setTop(event);~id.setLocate(event)"
+                        />
+                    </g>
+                  </for>
+              </first>
+              <g id="~id topPath">
+              </g>
+            </g>
+            <g id="~id legendGroup">
+              <rect
+                id="~id legendBox"
+                style="opacity:0.925;fill:#76abad;fill-opacity:1;stroke:#173241;stroke-width:1px;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+                width="16"
+                height="8"
+                x="${0.67*(~xmax - ~xmin)}"
+                y="${-0.8*(~ymax - ~ymin)}"
+                ry="2" />
+              <first escape=%first%>
+                <for var=num range = 10 replace>
+                  <if condition= "${~num < ~items }" replace>
+                    <g id="~id ~name~numLegend"
+                    onmousemove = "~id.setTopId('~id ~name~num path~num')">
+                      <path
+                        id="~id ~name~numLegendLine"
+                        d="m ${0.67*(~xmax - ~xmin)+ 2},${-0.8*(~ymax - ~ymin) + 2.5 + 3*~num} h 2"
+                        style="fill:none;stroke:~color~num;stroke-width:${px}px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+                      <text
+                        id="~id ~name~numLegendLabel"
+                        y="${-0.8*(~ymax - ~ymin) + 3.5 + 3*~num}"
+                        x="${0.67*(~xmax - ~xmin) + 6 }"
+                        style="font-style:normal;font-weight:normal;font-size:2.67px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px"
+                        xml:space="preserve">~name~num</text>
+                  </if>
+                </for>
+              </first>
+              </g>
+            </g>
+        </svg>
+      </custom>
+
+
+
+      <graph
+        id='graph1'
+        title = 'Graph 1'
+        xmin=0
+        xmax=62
+        xtickinterval=10
+        ymin=0
+        ymax=42
+        ytickinterval=10
+        data0="[5,8,9,2,4,2,11,9,6,7,12,15,19,11,14,13,7,9,11,13,12,17,15,15,22,18,19,17,21,23,17,22,23,28,26,22,22,23,26,27,31,30,28,34]",
+        name0="line0"
+        color0=#0f0
+        data1="[1,5,8,4,6,2,9,3,4,5,11,12,13,14]",
+        name1="line1"
+        color1=#ff0
+        items=2></graph>
+    </body>
+  </html>
