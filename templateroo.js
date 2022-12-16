@@ -204,22 +204,42 @@ var templateroo = {
           if (!save){
             delete varObj[varName]
           }
+          console.log(varName, val)
           let name = prefix + varName
           let o = Object.defineProperty(varObj, varName,{
             set: (v)=>{
+              console.log("setting", varName, v)
               let o = this['_'+ varName]
               this['_'+ varName] = v;
 
               if (v instanceof Object){
                 let pre = prefix + varName + '.'
                 for (let [k,v2] of Object.entries(v)){
-                  if (v2 instanceof Object){
+                    console.log("k", k, v2)
+                  if (v2 instanceof Array){
+                    let ao= templateroo.genericTools.vars.addCbs.var(k, v, changeCb, setCb, getCb, pre, true)
+                  }else if (v2 instanceof Object){
+                    console.log("here")
                     let ao= templateroo.genericTools.vars.addCbs.var(k, v2, changeCb, setCb, getCb, pre, true)
                   }
                   else{
+
                     let ao= templateroo.genericTools.vars.addCbs.var(k, v, changeCb, setCb, getCb, pre, true)
                   }
                 }
+              }
+
+              if (Array.isArray(v)){
+                this['_'+ varName] = new Proxy(v, {
+                  set: (target, property, value, receiver) => {
+                    console.log("setting", property, value)
+                    if (property === 'length') {
+                        Reflect.set(target, property, value, receiver);
+                      varObj[varName] = target
+                    }
+                    return Reflect.set(target, property, value, receiver);
+                  },
+                });
               }
               if (v != o){
                 changeCb(name, v)
@@ -232,6 +252,7 @@ var templateroo = {
               return v
             },
           })
+
           varObj[varName]= val
           return varObj[varName]
         },
@@ -1635,15 +1656,10 @@ var templateroo = {
       a[attr[i].name] = attr[i].value
     }
     if (a.init !== "false"){
-      let remover = ()=>{}
-      let e = document.addEventListener('DOMContentLoaded', ()=>{
-        remover()
+      document.addEventListener('DOMContentLoaded', function template(){
         templateroo.templateDoc()
+        document.removeEventListener('DOMContentLoaded', template)
       })
-      remover = ()=>{
-        document.removeEventListener('DOMContentLoaded', e)
-      }
-
     }
   }
 }
