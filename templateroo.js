@@ -1056,10 +1056,10 @@ var templateroo = {
           let inner = elAttrObj.innerHTML
           let entire = elAttrObj.outerHTML.replaceAll('&amp;','')
           let r = entire
-          if (!["true", "false"].includes(c)){
-            return [entire, entire]
-          }
-          let v = [inner, ""][1*(c=="false")]
+//          if (!["true", "false"].includes(c)){
+//            return [entire, entire]
+//          }
+          let v = eval(c)?inner:""
           if (Object.keys(elAttrObj).includes('replace')){
             r = v
           }else{
@@ -1098,7 +1098,7 @@ var templateroo = {
           let v = inner
           if (cases.includes(c)){
             let i = cases.indexOf(c);
-            let v2 = vals[i]
+            v = vals[i]
           }
           if (Object.keys(elAttrObj).includes('replace')){
             r = v
