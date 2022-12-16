@@ -10,11 +10,11 @@ Templateroo is an open-source **client-side html templating** package, written i
  - **eval:** evaluate js text when rendering
 
 ## Learn
-I am currently working on developing examples to teach templateroo to users. For now, a few examples I made for debugging are available in [examples](https://github.com/geargaroo/templateroo/examples) and can be rendered here:
-
- - https://geargaroo.github.io/templateroo/examples/cryptoScraper.html
- - https://geargaroo.github.io/templateroo/examples/test.html
- - https://geargaroo.github.io/templateroo/examples/examples.html
+I am currently working on developing examples to teach templateroo to users. For now, a few examples I made for debugging are available in [examples](https://github.com/modularizer/templateroo/examples) and can be rendered here:
+ - https://modularizer.github.io/templateroo/examples/graph.html
+ - https://modularizer.github.io/templateroo/examples/cryptoScraper.html
+ - https://modularizer.github.io/templateroo/examples/test.html
+ - https://modularizer.github.io/templateroo/examples/example.html
 
 
 
@@ -22,12 +22,12 @@ I am currently working on developing examples to teach templateroo to users. For
 ###  Html
 To import the templateroo object into your html code, paste the following into anywhere in your html document **or** copy and paste the contents of the link into a `<script>`element.
 
-    <script src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
+    <script src = 'https://modularizer.github.io/templateroo/templateroo.js'></script>
 This script element will by default run the templating code to change the html of the current **document**. If you wish to get the templateroo object without executing this code, include the attribute `init=false` in the`<script>` tag:
 
 
 
-    <script init=false src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
+    <script init=false src = 'https://modularizer.github.io/templateroo/templateroo.js'></script>
 
 # Features
 ## variable replacement
@@ -192,7 +192,7 @@ When you are using a server, it is pretty straightforward to set the favicon.ico
 **Examples:**
  | html | rendered |
 |--|--|
-| `<faviconsvg src ='https://geargaroo.github.io/templateroo/mySVGFavicon.svg'></faviconsvg>` | my image |
+| `<faviconsvg src ='https://modularizer.github.io/templateroo/mySVGFavicon.svg'></faviconsvg>` | my image |
 | `<faviconsvg></faviconsvg>` | blue circle |
 | `<faviconsvg text = A></faviconsvg>` | blue A |
 | `<faviconsvg text = A color=red></faviconsvg>` | red A |
@@ -301,16 +301,16 @@ planned for use with `<if>` tag
 # Extended Functionality
 In order to limit the already large size of templateroo.js, future additions of helpful functionality  will be added to extended.js. In order to init templateroo using extended.js, do as follows:
 
-	<script init=false src = 'https://geargaroo.github.io/templateroo/templateroo.js'></script>
-	<script src = 'https://geargaroo.github.io/templateroo/extended.js'></script>
+	<script init=false src = 'https://modularizer.github.io/templateroo/templateroo.js'></script>
+	<script src = 'https://modularizer.github.io/templateroo/extended.js'></script>
 
 ## demo
 The demo tag will be used to demonstrate templateroo's capabilities, using a split screen view with one side showing the input and the other showing the rendered html. I may make it a triple view, with the middle shoing the adjusted html. For now, the element is static, but hopefully it will soon be editable and show live updates
 
 
 ## Tests and Demos
-A few barebones examples are available in [examples](http://github.com/geargaroo/templateroo/examples). I will work to develop this further and make more demos.
+A few barebones examples are available in [examples](http://github.com/modularizer/templateroo/examples). I will work to develop this further and make more demos.
 
 ## Suggestions/Questions
 If you have questions about use or suggestions for future development, please let me know
-[`geargarooco@gmail.com`](https://mail.google.com/mail/u/0/?fs=1&view=cm&shva=1&to=geargarooco@gmail.com&su=Templateroo:%20Questions/Suggestions&tf=1&body=Hi%20Torin,)
+[`modularizerco@gmail.com`](https://mail.google.com/mail/u/0/?fs=1&view=cm&shva=1&to=modularizerco@gmail.com&su=Templateroo:%20Questions/Suggestions&tf=1&body=Hi%20Torin,)
