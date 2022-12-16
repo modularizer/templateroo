@@ -817,12 +817,13 @@ var templateroo = {
               cl='';
             }else{
               classPresent = true;
+              cl += " ";
             }
             //update class string
             classes.filter(c=>!cl.includes(c)).map(c=>{cl+=c})
             if (classes.length> 0){
               if (classPresent){//replace class string if present
-                r = r.replace(/class=.*?\s"/, `class="${cl}"`)
+                r = r.replace(/class=".*?"/, `class="${cl}"`)
               }else{//add class string
                 r = r.replace(t, `${t} class="${cl}"`)
               }
